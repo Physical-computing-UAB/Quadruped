@@ -14,10 +14,12 @@ class W1:
 		self.root.geometry("350x300")
 		
 		# LINUX:
-		self.ser = serial.Serial('/dev/ttyACM1', 115200)
+		#self.ser = serial.Serial('/dev/ttyACM1', 115200)
 		
 		# WIN:
 		#self.ser = serial.Serial('COM3', 115200)
+		
+		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		
 		self.root.bind('<Left>',  self.leftKey)
 		self.root.bind('<Right>', self.rightKey)
@@ -135,11 +137,12 @@ class W1:
 				else:
 					msg += str(invangV)
 
-				self.ser.write('hv'+msg+';')
+				#self.ser.write('hv'+msg+';')
 				#print 'hv'+msg+';'
-				print self.ser.readline()
+				#print self.ser.readline()
+				self.sock.sendto('hv'+msg+';', ('192.168.0.30', 3000))
 			
-			time.sleep(0.01)
+			time.sleep(0.1)
 
 
 
