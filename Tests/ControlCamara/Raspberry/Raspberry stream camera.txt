@@ -1,1 +1,20 @@
- raspivid -t 0 -n -b 15000000 -w 640 -h 480 -fps 15 -o - | cvlc -v stream:///dev/stdin --sout '#rtp{sdp=rtsp://:8554/}' :demux=h264
+Raspberry:
+---------------------------
+
+> cd pistreaming/
+> python3 server.py &
+
+
+
+
+
+Client:
+--------------------------
+
+browser-> http://[RSPI IP]:8082/index.html
+
+
+
+
+
+(https://github.com/waveform80/pistreaming)
