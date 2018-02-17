@@ -6,8 +6,8 @@
 
 struct UltrasonicSensor
 {
-  const int echo;
-  const int trigger;
+  int echo;
+  int trigger;
   long duration;
   int distance;
 };
@@ -23,11 +23,15 @@ public:
   // GETTERS
 
   // SETTERS
-
+  void setPinsTo(int sensor, int echo, int trigger);
   
 private:
+  void initSensors();
+  
   int m_sensorNum;
-  UltrasonicSensor* m_array;
+  UltrasonicSensor* m_sensorArray;
+
+  
 
 };
 
