@@ -138,9 +138,9 @@ class W1:
 					msg += str(invangV)
 
 				#self.ser.write('hv'+msg+';')
-				#print 'hv'+msg+';'
 				#print self.ser.readline()
-				self.sock.sendto('hv'+msg+';', ('192.168.0.30', 3000))
+				print 'cc'+msg+';'
+				self.sock.sendto('cc'+msg+';', ('192.168.0.30', 3000))
 			
 			time.sleep(0.1)
 
