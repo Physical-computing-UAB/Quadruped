@@ -21,9 +21,9 @@ int Ang_camV = 90;
 // ======================== Legs Servos & distances ===================================
 
 // Distances of the leg
-float coxa =  3;  // cm
-float femur = 5;  // cm
-float tibia = 9;  // cm
+float coxa =  3.7;  // cm
+float femur = 5.9;  // cm
+float tibia = 9.45;  // cm
 
 // Servos
 Servo S_RF1;
@@ -73,10 +73,10 @@ void setup() {
   Serial.begin(115200);
 
   // Attach servos
-  S_camH.attach(2);
-  S_camV.attach(3);
+  /*S_camH.attach(2);
+  S_camV.attach(3);*/
   
-  /*S_RF1.attach(2);
+  S_RF1.attach(2);
   S_RF2.attach(3);
   S_RF3.attach(4);
   S_LF1.attach(5);
@@ -87,7 +87,7 @@ void setup() {
   S_RB3.attach(10);
   S_LB1.attach(11);
   S_LB2.attach(12);
-  S_LB3.attach(13);*/
+  S_LB3.attach(13);
 
   // Init coords
   RFx = 8;
@@ -114,7 +114,7 @@ void setup() {
 
 // ======================== Functions called via Serial ===================================
 
-// Set servo positions
+// Set camera servo positions
 void updateCServos(){
   S_camH.write(Ang_camH);
   S_camV.write(Ang_camV);
@@ -138,14 +138,17 @@ void controlCamera(String var){
 
 
 void test(String var){
-  Serial.println("Message tt received");
-  FullWalk1(10,10);
-}
-void fooCC(String var){
+  Serial.print(var);
+  int x = var.substring(0,2).toInt();
+  int y = var.substring(2,4).toInt();
+  int z = var.substring(4).toInt();
 
-  // Process var.....
+  movLegs(x,y,z, RBx,RBy,RBz, LFx,LFy,LFz, LBx,LBy,LBz, 20,50);
+}
+void test2(String var){
+
   Serial.print("Message CC received-> ");
-  Serial.println(var);
+  FullWalk1(20,50);
 }
 
 // ===================================================================================
@@ -169,11 +172,11 @@ void readSerial(){
       if(serialHeader == "cc"){   // Camera control
         controlCamera(serialBody);
       }else
-      if(serialHeader == "tt"){   // Test
+      if(serialHeader == "t1"){   // Test
         test(serialBody);
       }else
-      if(serialHeader == "cc"){
-        fooCC(serialBody);
+      if(serialHeader == "t2"){
+        test2(serialBody);
       }
   
       // Clear the buffer
