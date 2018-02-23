@@ -1,3 +1,5 @@
+#include "UltrasonicSensor.hpp"
+
 // Primer sensor ultrasonido
 const int trigPin1 = 11;
 const int echoPin1 = 10;
