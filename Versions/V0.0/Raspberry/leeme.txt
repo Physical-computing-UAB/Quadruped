@@ -3,6 +3,7 @@ Ejecutar udp2serial.py en raspberry para iniciar el servidor UDP que controlara 
 ------------------------------------------------
 Requerimientos:
 	- Python 2.7
+	- PySerial
 ------------------------------------------------
 Para ejecutar:
 	python udp2serial.py [ipRaspberry] [puerto]
