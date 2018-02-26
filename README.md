@@ -6,3 +6,5 @@ Robot cuadrúpedo hecho con arduino y rasperry pi. Entre los dispositivos utiliz
 -
 -
 -
+
+![Alt text](sandbox/quad.png?raw=true "Quadruped render")
