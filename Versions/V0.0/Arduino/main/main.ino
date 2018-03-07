@@ -21,9 +21,9 @@ int Ang_camV = 90;
 // ======================== Legs Servos & distances ===================================
 
 // Distances of the leg
-float coxa =  3.7;  // cm
-float femur = 5.9;  // cm
-float tibia = 9.45;  // cm
+float coxa =  8.4;  // cm
+float femur = 9.3;  // cm
+float tibia = 11.5;  // cm
 
 // Servos
 Servo S_RF1;
@@ -49,9 +49,9 @@ double RBx, RBy, RBz;
 double LBx, LBy, LBz;
 
 // Offset angles of each servo
-double offset1RF = 135;
-double offset2RF = 180;
-double offset3RF  = 45;
+double offset1RF = 0;
+double offset2RF = 0;
+double offset3RF  = 0;
 
 double offset1LF = 45;
 double offset2LF = 0;
@@ -73,13 +73,13 @@ void setup() {
   Serial.begin(115200);
 
   // Attach servos
-  /*S_camH.attach(2);
-  S_camV.attach(3);*/
+  S_camH.attach(4);
+  S_camV.attach(3);
   
-  S_RF1.attach(2);
-  S_RF2.attach(3);
-  S_RF3.attach(4);
-  S_LF1.attach(5);
+  //S_RF1.attach(2);
+  /*S_RF2.attach(3);
+  S_RF3.attach(4);*/
+  /*S_LF1.attach(5);
   S_LF2.attach(6);
   S_LF3.attach(7);
   S_RB1.attach(8);
@@ -87,7 +87,7 @@ void setup() {
   S_RB3.attach(10);
   S_LB1.attach(11);
   S_LB2.attach(12);
-  S_LB3.attach(13);
+  S_LB3.attach(13);*/
 
   // Init coords
   RFx = 8;
@@ -144,10 +144,14 @@ void test(String var){
   int z = var.substring(4).toInt();
 
   movLegs(x,y,z, RBx,RBy,RBz, LFx,LFy,LFz, LBx,LBy,LBz, 20,50);
+  Serial.print(" S");
+  Serial.print(S_RF2.read());
+  Serial.print(",");
+  Serial.println(S_RF3.read());
 }
 void test2(String var){
 
-  Serial.print("Message CC received-> ");
+  //Serial.print("Message CC received-> ");
   FullWalk1(20,50);
 }
 
