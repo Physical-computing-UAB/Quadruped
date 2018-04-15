@@ -10,4 +10,4 @@ setPinsTo	KEYWORD2
 init  		KEYWORD2
 handleEvents  	KEYWORD2
 update  	KEYWORD2
-move  		KEYWORD2
+behave  	KEYWORD2

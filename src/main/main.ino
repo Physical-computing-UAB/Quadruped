@@ -1,3 +1,4 @@
+#include <ArduinoSTL.h>
 #include <CRobot.h>
 
 const int DELAY_TIME = 100; // Time to think 
@@ -21,7 +22,7 @@ void loop() // The robot will be always running once it has been initialized
   Robot.update();
 
   // 4.- Move parts.
-  Robot.move();
+  Robot.behave();
   
   delay(DELAY_TIME); // Time for the robot to think
 }

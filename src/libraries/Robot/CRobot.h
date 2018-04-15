@@ -4,26 +4,34 @@
 // Include libraries.
 #include <Arduino.h>
 #include <UltrasonicSensor.h>
+#include <vector>
 
+class CMachineState; // A promess that CMachineState exists
 class CRobot {
 public:
   // Constructor
-  CRobot (){};
+  CRobot();
   // Destructor
   ~CRobot(){};
 
-  // Miscellaneous
-  virtual bool init(){ Serial.println("Init done"); return true; };
-  virtual void handleEvents(){ Serial.println("Handling events"); };
-  virtual void update(){ Serial.println("Updating.."); };
-  virtual void move(){ Serial.println("Init done"); };
+  bool init();
+  void handleEvents();
+  void update();
+  void behave();
+
+  // State transitions
+  void pushState(CMachineState* pState);
+  void changeState(CMachineState* pState);
+  void popState();
 
   // Getters & Setters
   UltrasonicSensorArray getUSA(){ return m_usArray; };
 
-  void setUSA( UltrasonicSensorArray& usarray ){}const;
+  void setUltrasonicSA( UltrasonicSensorArray* pUlrasonicSA ){ m_usArray = pUlrasonicSA; }const;
+
 private:
-  UltrasonicSensorArray m_usArray;
+  std::vector<CMachineState*> m_mindStates; // Stack
+  UltrasonicSensorArray* m_usArray;
 };
 
 #endif
