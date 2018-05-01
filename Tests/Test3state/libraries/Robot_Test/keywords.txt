@@ -1,0 +1,16 @@
+UltrasonicSensorArray	KEYWORD1
+UltrasonicSensor	KEYWORD1
+CRobot			KEYWORD1
+SerialHandler	KEYWORD1
+getDistanceOf	KEYWORD2
+getDurationOf	KEYWORD2
+initPins	KEYWORD2
+measure	KEYWORD2
+toString	KEYWORD2
+setPinsTo	KEYWORD2
+init  		KEYWORD2
+handleEvents  	KEYWORD2
+update  	KEYWORD2
+behave  	KEYWORD2
+readSerial	KEYWORD2
+
