@@ -1,8 +1,0 @@
-UltrasonicSensorArray	KEYWORD1
-getDistanceOf	KEYWORD2
-getDurationOf	KEYWORD2
-initPins	KEYWORD2
-measure	KEYWORD2
-toString	KEYWORD2
-setPinsTo	KEYWORD2
-
