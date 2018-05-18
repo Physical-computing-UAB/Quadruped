@@ -10,14 +10,15 @@ public:
   ~GreenState(){};
 
   // Generic functions
-  void handleEvents();
   void update();
   void run();
 
   bool onEnter();
   bool onExit();
-private:
 
+  String getStateID() const { return s_GstateID; };
+private:
+  static const String s_GstateID;
 };
 
 #endif
