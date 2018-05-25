@@ -7,5 +7,5 @@ Robot cuadrúpedo hecho con arduino y rasperry pi. Entre los dispositivos utiliz
 -
 -
 
-<img src="sandbox/quad.png" width="350"/>
+<img src="Documents/sandbox/quad.png" width="350"/>
 
