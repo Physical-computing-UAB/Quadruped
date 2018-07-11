@@ -42,13 +42,11 @@ class IKEngine {
 		
 		void setMode(int mode);
 		
-		void setSpeed(float sp);
+		void setDiv(float div);
 		
 		void setDir(float dir);
 		
 		void setRotation(float deg);
-		
-		void stopAll();
 		
 		// ======================================================
 		
@@ -77,9 +75,9 @@ class IKEngine {
 	private:
 
 		// Distances of the leg (cm)
-		float coxa;
-		float femur;
-		float tibia;
+		float Coxa;
+		float Femur;
+		float Tibia;
 		
 		// Coordinates x, y, z of each leg
 		double RFx, RFy, RFz;	// Right - Front
@@ -88,8 +86,8 @@ class IKEngine {
 		double LBx, LBy, LBz;	// Left  - Back
 		
 		// Max and Mins coordinates where legs can go
-		double max_x, min_x;
-		double max_y, min_y;
+		double Max_x, Min_x;
+		double Max_y, Min_y;
 		
 		// Offset angles of each servo
 		double offset1RF, offset2RF, offset3RF;
@@ -113,17 +111,43 @@ class IKEngine {
 		int walk_mode;	// Switch between different modes
 		float MovDiv;	// Division of the walk cycle (Speed of the movements)
 		int dir;	// 0, 1, 2, 3, 4 (stop, forward, right, left, back)
-		float rotation;	// Angle to rotate the robot
+		float rotation;	// -1, 0, 1 -> rotation direction (left, none, right)
 		
-		
-		// -- Private methods --
-		void walk();		// Calculates the legs coordinates
-		void writeServos(); 	// Write the angles to the servos
 		
 		// Functions to calculate the servo angles with IK
 		int IKang1(double x, double y, double z);
 		int IKang2(double x, double y, double z);
 		int IKang3(double x, double y, double z);
+		
+		
+		
+		// -- Private methods --
+		void walk();		// Calculates the legs coordinates
+		void writeServos(); 	// Write the angles to the servos
+		int movLegs(float * coordsMatrix, int index);
+		
+		// -- movLegs variables --
+		int mv_cycle;
+		float mv_inc[12];
+		
+		
+		
+		// Walk1 coordinates matrix
+		float W1_CoordsMatrix[12][12] = 
+		{{14,9,4.1,     14,4,16,     14,6,14.3,       14,9,5.8}   
+		{14,9,2.4,      14,4,-1,     14,6,12.6,       14,9,7.5}
+		{14,9,0.7,      14,9,-1,     14,9,10.9,       14,9,9.2}
+		{14,4,-1,       14,9,0.7,    14,9,9.2,        14,6,10.9}
+		{14,4,16,       14,9,2.4,    14,9,7.5,        14,6,12.6}
+		{14,9,16,       14,9,4.1,    14,9,5.8,        14,9,14.3}
+		{14,6,14.3,     14,9,5.8,    14,9,4.1,        14,4,16}
+		{14,6,12.6,     14,9,7.5,    14,9,2.4,        14,4,-1}
+		{14,9,10.9,     14,9,9.2,    14,9,0.7,        15,9,-1}
+		{14,9,9.2,      14,6,10.9,   14,4,-1,         14,9,0.7} 
+		{14,9,7.5,      14,6,12.6,   14,4,16,         14,9,2.4}
+		{14,9,5.8,      14,9,14.3,   14,9,16,         14,9,4.1}};
+
+		
 		
 };
 
