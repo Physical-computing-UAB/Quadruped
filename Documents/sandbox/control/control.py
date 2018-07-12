@@ -1,4 +1,5 @@
 from Tkinter import *
+from ScrolledText import *
 import time
 import threading
 import sys
@@ -9,33 +10,26 @@ from functools import partial
 
 class W1:
 	
-	def __init__(self, mode=0, ip="192.168.4.1", port=30001):
-		# mode = 0: only print,  1: serial   2: udp
-		
-		self.mode = mode
+	def __init__(self, ip='192.168.4.1', port=8787):
+	
+		self.sender = Sender(ip, port)
+		self.connected =  False
 		
 		self.root = Tk()
 		self.root.geometry("1000x500")
 		
 		self.root.title("Quadruped Controller")
 		
-		if(mode == 1):
-			# LINUX:
-			#self.ser = serial.Serial('/dev/ttyACM1', 115200)
-			# WIN:
-			self.ser = serial.Serial('COM8', 115200)
-		elif (mode == 2):
-			self.ip = ip
-			self.port = port
-			self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-			
 		# -------------------------------------------------------------------------	
 		
 		self.buttons = {}
 		self.labels = {}
 		self.scales = {}
 		self.spinboxs = {}
+		self.text = {}
+		
+		self.toSend = set()
 		
 		# -------------------------------------------------------------------------	
 		
@@ -78,7 +72,9 @@ class W1:
 		self.camV.trace("w", self.update_cam)
 		self.camH.trace("w", self.update_cam)
 
-		self.root.after(2000, self.handleKeyActions)
+		self.root.after(1000, self.handleKeyActions)
+		self.root.after(1000, self.send)
+		self.root.after(1500, self.checkConn())
 		self.root.focus_set()
 		self.root.mainloop()
 
@@ -86,6 +82,8 @@ class W1:
 
 	def initElements(self):
 
+		# ------ Frames ------
+	
 		movframe = LabelFrame(self.root, text="Movement")
 		movframe.place(x=10,y=0)
 		c = Label(movframe, text=" ")
@@ -227,6 +225,7 @@ class W1:
 		
 		
 		# ------ Canvas ------
+		
 		self.canv = Canvas(self.root, height=120, width=200)
 		self.canv.place(x=710, y=60)
 		self.arcV = self.canv.create_arc((10,10,110,110), start=90,extent=180, fill="snow")
@@ -234,6 +233,30 @@ class W1:
 		
 		self.RectV = self.canv.create_arc((10,10,110,110), start=90,extent=self.camV.get(), fill="snow", outline="blue")
 		self.arcH = self.canv.create_arc((100,50,200,150), start=0, extent=180-self.camH.get(), fill="snow", outline="red")
+		
+		
+		# ------ Text ------
+		
+		self.text['camIP'] = Text(self.root, width=122, height=1, fg="blue")
+		self.text['camIP'].place(x=10,y=270)
+		self.text['camIP'].insert(INSERT, "Video Streaming ->  http://192.168.4.1:8082/index.html")
+		self.text['camIP'].configure(state=DISABLED)
+		
+		
+		self.text['log'] = ScrolledText(self.root, width=120, height=12, state=DISABLED)
+		self.text['log'].place(x=10,y=300)
+		
+		
+		
+		if self.sender.ping():
+			self.text['log'].configure(state='normal')
+			self.text['log'].insert('end', '***Connected')
+			self.text['log'].configure(state='disabled')
+			self.connected = True
+		else:
+			self.text['log'].configure(state='normal')
+			self.text['log'].insert('end', '***Disonnected')
+			self.text['log'].configure(state='disabled')
 
 		
 		
@@ -284,6 +307,7 @@ class W1:
 		
 		
 	def update_cam(self, *args):
+		self.toSend.add('cam')
 		self.canv.delete("all")
 		self.arcV = self.canv.create_arc((10,10,110,110), start=90,extent=180, fill="snow")
 		self.arcH = self.canv.create_arc((100,50,200,150), start=0,extent=180, fill="snow")
@@ -296,30 +320,64 @@ class W1:
 		
 	
 	def update_sp(self, *args):
-		print self.speed.get()
-		self.send()
+		self.toSend.add('sp')
 	
 	def update_st(self, *args):
-		print self.steps.get()
-		self.send()
+		self.toSend.add('st')
 
 	def setDir(self, *args):
 		self.dir = args[0]
-		print self.dir
-		self.send()
+		self.toSend.add('dir')
 		
 	def setRot(self, *args):
 		self.rot = args[0]
-		print self.rot
-		self.send()
+		self.toSend.add('rot')
 	
 	
 	
 	def send(self):
+	
+		for u in self.toSend:
+			if u == 'sp':
+				self.sender.send_speed(self.speed.get())
+				pass
+			elif u == 'st':
+				self.sender.send_steps(self.steps.get())
+				pass
+			elif u == 'dir':
+				self.sender.send_walk(self.dir)
+				pass
+			elif u == 'rot':
+				self.sender.send_rot(self.rot)
+				pass
+			elif u == 'cam':
+				self.sender.send_cam(self.camH.get(), self.camV.get())
+				pass
+				
+		self.toSend.clear()
+	
 		self.dir = 0
 		self.rot = 0
-		print 'hey :D'
 		
+		self.root.after(500, self.send)
+		
+		
+		
+	def checkConn(self):
+		self.sender.send_ping()
+		ok = self.sender.isAlive()
+		if ok and not self.connected:
+			self.text['log'].configure(state='normal')
+			self.text['log'].insert('end', '\n***Connected')
+			self.text['log'].configure(state='disabled')
+			self.connected = True
+		elif not ok and self.connected:
+			self.text['log'].configure(state='normal')
+			self.text['log'].insert('end', '\n***Disconnected')
+			self.text['log'].configure(state='disabled')
+			self.connected = False
+			
+		self.root.after(5000, self.checkConn)
 		
 		
 	
@@ -332,9 +390,32 @@ class W1:
 	def keyReleaseHandler(self, event):
 		self.activeKeys.remove(event.keycode)
 		
+		if event.keycode == 87:		# W key
+			self.buttons["fw"].config(relief="raised")
+			return
+		
+		if event.keycode == 68:		# D key
+			self.buttons["r"].config(relief="raised")
+			return
+		
+		if event.keycode == 83:		# S key
+			self.buttons["bw"].config(relief="raised")
+			return
+		
+		if event.keycode == 65:		# A key
+			self.buttons["l"].config(relief="raised")
+			return
+		
+		if event.keycode == 69:		# E key
+			self.buttons["rr"].config(relief="raised")
+			return
+		
+		if event.keycode == 81:		# Q key
+			self.buttons["rl"].config(relief="raised")
+			return
 		
 	def handleKeyActions(self):
-		print self.activeKeys
+		#print self.activeKeys
 		
 		for k in self.activeKeys:
 			if k == 38:		# Up key
@@ -359,26 +440,32 @@ class W1:
 				
 			if k == 87:		# W key
 				self.setDir(1)
+				self.buttons["fw"].config(relief="sunken")
 				pass
 			
 			if k == 68:		# D key
 				self.setDir(2)
+				self.buttons["r"].config(relief="sunken")
 				pass
 				
 			if k == 83:		# S key
 				self.setDir(3)
+				self.buttons["bw"].config(relief="sunken")
 				pass
 			
 			if k == 65:		# A key
 				self.setDir(4)
+				self.buttons["l"].config(relief="sunken")
 				pass
 			
 			if k == 69:		# E key
 				self.setRot(1)
+				self.buttons["rr"].config(relief="sunken")
 				pass
 			
 			if k == 81:		# Q key
 				self.setRot(-1)
+				self.buttons["rl"].config(relief="sunken")
 				pass
 		
 		
@@ -435,13 +522,155 @@ class W1:
 	
 	
 
+	
+class Sender:
+	
+	def __init__(self, ip, port):
+		
+		self.ip = ip
+		self.port = port
+		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		self.sock.settimeout(2)
+		
+		self.con = False
+		
+		self.headers = {
+						'ping': 'p',
+						'walk': 'w',
+						'rot': 'r',
+						'speed': 's',
+						'steps': 't',
+						'cam': 'c'
+						}
+		
+	
+	# -------------- Ping --------------
+	def send_ping(self):
+		th = threading.Thread(target=self.ping)
+		th.start()
+	
+	def ping(self):
+		self.sock.sendto(self.headers['ping']+';', (self.ip, self.port))
+		try:
+			data, addr = self.sock.recvfrom(128)
+			if self.con == False:
+				self.con = True
+			return True
+		except:
+			self.con = False
+			return False
+	
+	def isAlive(self):
+		return self.con
+	# ---------------------------------
+		
+	
+	# -------------- Walk --------------
+	def send_walk(self, dir):
+		th = threading.Thread(target=partial(self.walk, (dir)))
+		th.start()
+		
+	def walk(self, dir):
+		self.sock.sendto(self.headers['walk']+str(dir)+';', (self.ip, self.port))
+		try:
+			data, addr = self.sock.recvfrom(128)
+			return True
+		except:
+			return False
+	# ---------------------------------
+	
+	
+	# -------------- Rot --------------
+	def send_rot(self, rot):
+		th = threading.Thread(target=partial(self.rot, (rot)))
+		th.start()
+		
+	def rot(self, rot):
+		self.sock.sendto(self.headers['rot']+str(rot)+';', (self.ip, self.port))
+		try:
+			data, addr = self.sock.recvfrom(128)
+			return True
+		except:
+			return False
+	# ---------------------------------
+	
+	
+	# -------------- Speed --------------
+	def send_speed(self, sp):
+		th = threading.Thread(target=partial(self.speed, (sp)))
+		th.start()
+		
+	def speed(self, sp):
+		self.sock.sendto(self.headers['speed']+str(sp)+';', (self.ip, self.port))
+		try:
+			data, addr = self.sock.recvfrom(128)
+			return True
+		except:
+			return False
+	# ---------------------------------
+	
+	
+	# -------------- Steps --------------
+	def send_steps(self, st):
+		th = threading.Thread(target=partial(self.steps, (st)))
+		th.start()
+		
+	def steps(self, st):
+		self.sock.sendto(self.headers['steps']+str(st)+';', (self.ip, self.port))
+		try:
+			data, addr = self.sock.recvfrom(128)
+			return True
+		except:
+			return False
+	# ---------------------------------
+	
+	
+	# -------------- Cam --------------
+	def send_cam(self, x,y):
+		th = threading.Thread(target=partial(self.cam, x,y))
+		th.start()
+		
+	def cam(self, x,y):
+		msg = ''
+		invangH = 180 - x
+		invangV = 180 - y
+		
+		if(invangH < 10):
+			msg += '00' + str(invangH)
+		elif (invangH < 100):
+			msg += '0' + str(invangH)
+		else:
+			msg += str(invangH)
+
+		if(invangV < 10):
+			msg += '00' + str(invangV)
+		elif (invangV < 100):
+			msg += '0' + str(invangV)
+		else:
+			msg += str(invangV)
+		
+		self.sock.sendto(self.headers['cam']+msg+';', (self.ip, self.port))
+		try:
+			data, addr = self.sock.recvfrom(128)
+			return True
+		except:
+			return False
+	# ---------------------------------
+	
+	
+	
+	
+	
+	
 if (__name__ == "__main__"):
-	if len(sys.argv) == 1:
-		print '"control.py [serial / udp]"'
+
+	if len(sys.argv) != 3:
+		print 'Control.py [ServerIp] [Port]'
 		w1 = W1()
 	else:
+		ip   = str(sys.argv[1])
+		port = int(sys.argv[2])
+		w1 = W1(ip, port)
 
-		if (sys.argv[1] == "serial"):
-			w1 = W1(1)
-		elif (sys.argv[1] == "udp"):
-			w1 = W1(2)
+
+	w1 = W1()
