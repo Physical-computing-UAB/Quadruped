@@ -35,7 +35,7 @@ class W1:
 		self.scales = {}
 		self.spinboxs = {}
 		
-		self.minxz = 0
+		self.minxz = 03
 		self.maxxz = 24
 		self.miny = -3
 		self.maxy = 15
@@ -370,9 +370,9 @@ class W1:
 			
 			print msg
 			if (self.mode == 1):
-				self.ser.write("ss" + msg + ";")
+				self.ser.write("s" + msg + ";")
 			elif (self.mode == 2):
-				self.sock.sendto('ss'+msg+';', (self.ip, self.port))
+				self.sock.sendto('s'+msg+';', (self.ip, self.port))
 
 	
 
