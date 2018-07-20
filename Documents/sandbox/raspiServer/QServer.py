@@ -4,10 +4,13 @@ import socket
 import serial
 import sys
 import time
+import threading
 
 
 
 class QServer:
+
+
 
 	def __init__(self, ip='192.168.4.1', port=8787):
 		
@@ -15,21 +18,36 @@ class QServer:
 		self.PORT = port
 		print 'Running on', ip, ':', port
 		
+		# Client address
 		self.client_ip = ""
 		self.client_port = 0
 		
 		
+		# State variables	('header':value)
+		self.SVar = {
+					'w': 0,		# dir
+					'r': 0,		# rot
+					'q': 0,		# pos
+					's': 1,		# speed
+					't': 1,			# steps
+					'c': '090090',	# camera pos
+					'm': 0		# mode
+					}
+					
+		self.prevSVar = self.SVar.copy()
+		
+		
 		# Message headers and functions to call when receive it
 		self.headers = {
-						'p': self.ping		# Ping
+						'p': self.ping,		# Ping
+						'w': self.walk,		# Walk
+						'r': self.rot,		# rot
+						'q': self.setPos	# wakeup or sleep
 						}
-				
 		
 		
 		
-		
-		
-		# ----- Create socket ----
+		# ----- Create server socket -------------------------------------------------------
 		try:
 			self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 			self.sock.bind((self.IP, self.PORT))
@@ -37,16 +55,65 @@ class QServer:
 			print "Can't create socket :("
 			print e
 			exit()
-		# -----------------------
-			
-			
-		self.run()
-
-
+		# ----------------------------------------------------------------------------------
 		
 		
-	def run(self):
+		# ----- Open serial comunication ---------------------------------------------------
+		self.ser = serial.Serial('/dev/ttyACM0', 115200)
+		# ----------------------------------------------------------------------------------
+			
+			
+			
+		#   State variable thread lock
+		self.varLock = threading.Lock()
+		
+		#   UDP server thread
+		self.thr_udp = threading.Thread(target=self.runServer)
+		self.thr_udp.start()
+		
+		#   Serial comunication thread
+		self.thr_ser = threading.Thread(target=self.runSerial)
+		self.thr_ser.start()
+		
+		
+		self.thr_udp.join()
+		self.thr_ser.join()
+		
+
+		
+	def runSerial(self):
+		wait = False
+		
 		while True:
+			for k in self.SVar.keys():	# Check if some variable has changed
+				self.varLock.acquire()
+				if self.SVar[k] != self.prevSVar[k]:
+					self.prevSVar[k] = self.SVar[k]
+					print 'serial',k+str(self.SVar[k])+';'	#ser.write(k+str(self.SVar[k])+';')	# Send changed value
+					self.ser.write(k+str(self.SVar[k])+';')
+					wait = True
+					
+					if k == 'w':
+						self.SVar['w']  = 0
+						self.prevSVar['w']  = 0
+					if k == 'r':
+						self.SVar['r']  = 0
+						self.prevSVar['r']  = 0
+
+				self.varLock.release()
+				if wait:
+					print self.ser.readline()  				# Wait for arduino ready
+					wait = False
+			
+
+		
+		
+	# Listen and update state variables
+	def runServer(self):
+		while True:
+
+			
+		
 			data, addr = self.sock.recvfrom(255)
 
 			self.client_ip = addr[0]
@@ -57,15 +124,36 @@ class QServer:
 			
 			print header, body
 			
-			for h in self.headers.keys():	# Call the right methon for the received header
+			for h in self.headers.keys():	# Call the right method for the received header
 				if header == h:
 					self.headers[h](body)
 
 			
 			
 	
+	
 	def ping(self, body):
 		self.sock.sendto(':D', (self.client_ip, self.client_port))
+		
+		
+	def setPos(self, body):
+		self.varLock.acquire()
+		self.SVar['q']  = body[0]
+		self.varLock.release()
+		
+		
+	def walk(self, body):
+		self.varLock.acquire()
+		self.SVar['w']  = body[0]
+		self.varLock.release()
+		
+	
+	def rot(self, body):
+		self.varLock.acquire()
+		self.SVar['r']  = body
+		self.varLock.release()
+		
+		
 
 	
 	
