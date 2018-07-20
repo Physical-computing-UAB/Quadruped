@@ -208,10 +208,10 @@ class W1:
 		self.buttons['rl'] = Button(self.root, text="<-\\", width=5, command=partial(self.setRot, (-1)))
 		self.buttons['rl'].place(x=130, y=50)
 		
-		self.buttons['wu'] = Button(self.root, text="wake up ^", width=10)
+		self.buttons['wu'] = Button(self.root, text="wake up ^", width=10, command=self.setWakeup)
 		self.buttons['wu'].place(x=500, y=30)
 		
-		self.buttons['si'] = Button(self.root, text="sleep   v", width=10)
+		self.buttons['si'] = Button(self.root, text="sleep   v", width=10, command=self.setSleep)
 		self.buttons['si'].place(x=500, y=70)
 		
 		self.buttons['st'] = Button(self.root, text="STOP", borderwidth=4, width=10)
@@ -332,6 +332,13 @@ class W1:
 	def setRot(self, *args):
 		self.rot = args[0]
 		self.toSend.add('rot')
+		
+	def setWakeup(self, *args):
+		self.toSend.add('posW')
+		
+	def setSleep(self, *args):
+		self.toSend.add('posS')
+	
 	
 	
 	
@@ -340,19 +347,18 @@ class W1:
 		for u in self.toSend:
 			if u == 'sp':
 				self.sender.send_speed(self.speed.get())
-				pass
 			elif u == 'st':
 				self.sender.send_steps(self.steps.get())
-				pass
 			elif u == 'dir':
 				self.sender.send_walk(self.dir)
-				pass
 			elif u == 'rot':
 				self.sender.send_rot(self.rot)
-				pass
 			elif u == 'cam':
 				self.sender.send_cam(self.camH.get(), self.camV.get())
-				pass
+			elif u == 'posW':
+				self.sender.send_wu()
+			elif u == 'posS':
+				self.sender.send_slp()
 				
 		self.toSend.clear()
 	
@@ -540,7 +546,11 @@ class Sender:
 						'rot': 'r',
 						'speed': 's',
 						'steps': 't',
-						'cam': 'c'
+						'cam': 'c',
+						'mode': 'm',
+						'pos': 'q',	# Position = sleep or wakeup
+						'wakeup': '1',
+						'sleep': '0'
 						}
 		
 	
@@ -587,6 +597,36 @@ class Sender:
 		
 	def rot(self, rot):
 		self.sock.sendto(self.headers['rot']+str(rot)+';', (self.ip, self.port))
+		try:
+			data, addr = self.sock.recvfrom(128)
+			return True
+		except:
+			return False
+	# ---------------------------------
+	
+	
+	# -------------- wakeup --------------
+	def send_wu(self):
+		th = threading.Thread(target=self.wu)
+		th.start()
+		
+	def wu(self):
+		self.sock.sendto(self.headers['pos']+self.headers['wakeup']+';', (self.ip, self.port))
+		try:
+			data, addr = self.sock.recvfrom(128)
+			return True
+		except:
+			return False
+	# ---------------------------------
+	
+	
+	# -------------- sleep --------------
+	def send_slp(self):
+		th = threading.Thread(target=self.slp)
+		th.start()
+		
+	def slp(self):
+		self.sock.sendto(self.headers['pos']+self.headers['sleep']+';', (self.ip, self.port))
 		try:
 			data, addr = self.sock.recvfrom(128)
 			return True
