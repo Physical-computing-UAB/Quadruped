@@ -1,4 +1,4 @@
-#include <Servo.h>
+ #include <Servo.h>
 
 float TODEG = 57.3; // Conversion from rad to deg
 
@@ -66,10 +66,16 @@ double offset2RB = 46;
 double offset3RB = 143;
 
 // Safe servo angle limits
-int r2 = 20;
+int r2 = 25;
 int l2 = 135;
 
+// ===================================================================================
 
+
+// ======================== State variables ====================================================
+int s_dir = 0;
+int s_rot = 0;
+int s_sp = 10;
 // ===================================================================================
 
 
@@ -124,7 +130,7 @@ void setup() {
   LBz = 12;
 
   movLegs(RFx,RFy,RFz, RBx,RBy,RBz, LFx,LFy,LFz, LBx,LBy,LBz, 10,10);
-  wakeup(50,20);
+  //wakeup(50,20);
 }
 // ===================================================================================
 
@@ -169,27 +175,32 @@ void test(String var){
   rotate2(1,30,30);
 }
 
-void st(String var){
-  sit(30,30);
-}
-
-void wu(String var){
-  wakeup(30,30);
+void setpos(String var){
+  int x = var.substring(0,1).toInt();
+  if (x == 0) sit(30,30);
+  else if (x == 1) wakeup(30,30);
 }
 
 void rr(String var){
   int xx = var.substring(0,2).toInt();
-  rotate(xx,30,10);
+  s_rot = xx;
+  //rotate(xx,30,10);
 }
 
 void ww(String var){
-  int xx = var.substring(0,2).toInt();
+  int x = var.substring(0,1).toInt();
+
+  s_dir = x;
   
-  if (xx > 0){
-    walk1FW(10,10); 
-  }else{
-    walk1BW(10,10);
-  }
+//  if (x == 1){
+//    walk1FW(10,10); 
+//  }else if(x == 3){
+//    walk1BW(10,10);
+//  }else if(x == 2){
+//    walk1R(10,10);
+//  }else if(x == 4){
+//    walk1L(10,10);
+//  }
 }
 
 void setLegsPos(String var){
@@ -240,33 +251,30 @@ void readSerial(){
     if(received == ';'){              // End of the current message
   
       //Get message
-      serialHeader = serialBuffer.substring(0, 2);
-      serialBody = serialBuffer.substring(2);
+      serialHeader = serialBuffer.substring(0, 1);
+      serialBody = serialBuffer.substring(1);
   
       //Process header
-      if(serialHeader == "cc"){   // Camera control
+      if(serialHeader == "c"){   // Camera control
         controlCamera(serialBody);
       }else
-      if(serialHeader == "t1"){   // Test
+      if(serialHeader == "t"){   // Test
         test(serialBody);
       }else
-      if(serialHeader == "rr"){
+      if(serialHeader == "r"){
         rr(serialBody);
       }else
-      if(serialHeader == "ik"){
+      if(serialHeader == "i"){
         changePos(serialBody);
       }else
-      if(serialHeader == "ww"){
+      if(serialHeader == "w"){
         ww(serialBody);
       }else
-      if(serialHeader == "ss"){
+      if(serialHeader == "s"){
         setLegsPos(serialBody);
       }else
-      if(serialHeader == "st"){
-        st(serialBody);
-      }else
-      if(serialHeader == "wu"){
-        wu(serialBody);
+      if(serialHeader == "q"){
+        setpos(serialBody);
       }
   
       // Clear the buffer
@@ -279,6 +287,8 @@ void readSerial(){
       serialBuffer += received; //Add the received char to the buffer
     }
   }
+  // Send Arduino Ready signal
+   //Serial.println("1");
 }
 // ===================================================================================
 
@@ -307,9 +317,9 @@ void walk1FW(int div, int time){
   float a[11];
   for (int i=0; i<11; i++){
     a[i] = zmin + (float(zmax-zmin)/10)*i;
-    Serial.print(i);
+    /*Serial.print(i);
     Serial.print(" - ");
-    Serial.println(a[i]);
+    Serial.println(a[i]);*/
   }
   //{10,-2,-1,-1,1,3,5,7,9,11,13,15};
   //{1, 2.3, 3.6, 4.9, 6.2, 7.5, 8.8, 10.1, 11.4, 12.7, 14};
@@ -325,7 +335,7 @@ void walk1FW(int div, int time){
   
   movLegs(x,down2,a[9],     x,down,a[4],    x,down,a[3],        x,up,a[10],      div,time);
   movLegs(x,down2,a[8],     x,down,a[5],    x,down,a[2],        x,up,a[0],       div,time);
-  movLegs(x,down,a[7],      x,down,a[6],    x,down,a[1],        15,down,a[0],    div,time);
+  movLegs(x,down,a[7],      x,down,a[6],    x,down,a[1],        x,down,a[0],    div,time);
   
   movLegs(x,down,a[6],      x,down2,a[7],   x,up,a[0],          x,down,a[1],     div,time);
   movLegs(x,down,a[5],      x,down2,a[8],   x,up,a[10],         x,down,a[2],     div,time);
@@ -341,30 +351,94 @@ void walk1BW(int div, int time){
   int down2 = 8;
   
   float a[11];
-  for (int i=10; i>-1; i--){
-    a[i] = zmin + (float(zmax-zmin)/10)*(10-i);
-    Serial.print(i);
-    Serial.print(" - ");
-    Serial.println(a[i]);
+  for (int i=0; i<11; i++){
+    a[i] = zmin + (float(zmax-zmin)/10)*i;
   }
 
 //movLegs(RFx,RFy,RFz,      RBx,RBy,RBz,    LFx,LFy,LFz,        LBx,LBy,LBz,     div,time);
-  movLegs(x,down,a[3],      x,up,a[10],     x,down2,a[9],       x,down,a[4],     div,time);
-  movLegs(x,down,a[2],      x,up,a[0],      x,down2,a[8],        x,down,a[5],     div,time);
-  movLegs(x,down,a[1],      x,down,a[0],    x,down,a[7],        x,down,a[6],     div,time);
-  
-  movLegs(x,up,a[0],        x,down,a[1],    x,down,a[6],        x,down2,a[7],     div,time);
-  movLegs(x,up,a[10],       x,down,a[2],    x,down,a[5],        x,down2,a[8],     div,time);
-  movLegs(x,down,a[10],     x,down,a[3],    x,down,a[4],        x,down,a[9],     div,time);
-  
-  movLegs(x,down2,a[9],     x,down,a[4],    x,down,a[3],        x,up,a[10],      div,time);
-  movLegs(x,down2,a[8],     x,down,a[5],    x,down,a[2],        x,up,a[0],       div,time);
-  movLegs(x,down,a[7],      x,down,a[6],    x,down,a[1],        15,down,a[0],    div,time);
-  
-  movLegs(x,down,a[6],      x,down2,a[7],   x,up,a[0],          x,down,a[1],     div,time);
   movLegs(x,down,a[5],      x,down2,a[8],   x,up,a[10],         x,down,a[2],     div,time);
+  movLegs(x,down,a[6],      x,down2,a[7],   x,up,a[0],          x,down,a[1],     div,time);
+  
+  movLegs(x,down,a[7],      x,down,a[6],    x,down,a[1],        x,down,a[0],    div,time);
+  movLegs(x,down2,a[8],     x,down,a[5],    x,down,a[2],        x,up,a[0],       div,time);
+  movLegs(x,down2,a[9],     x,down,a[4],    x,down,a[3],        x,up,a[10],      div,time);
+
+  movLegs(x,down,a[10],     x,down,a[3],    x,down,a[4],        x,down,a[9],     div,time);
+  movLegs(x,up,a[10],       x,down,a[2],    x,down,a[5],        x,down2,a[8],     div,time);
+  movLegs(x,up,a[0],        x,down,a[1],    x,down,a[6],        x,down2,a[7],     div,time);
+
+  movLegs(x,down,a[1],      x,down,a[0],    x,down,a[7],        x,down,a[6],     div,time);
+  movLegs(x,down,a[2],      x,up,a[0],      x,down2,a[8],        x,down,a[5],     div,time);
+  movLegs(x,down,a[3],      x,up,a[10],     x,down2,a[9],       x,down,a[4],     div,time);
+
   movLegs(x,down,a[4],      x,down,a[9],    x,down,a[10],       x,down,a[3],     div,time);
 }
+
+
+void walk1R(int div, int time){
+  int zmax = 16;
+  int zmin = 3;
+  double x = 11.9;
+  int up = 1;
+  int down = 11;
+  int down2 = 8;
+  
+  float a[11];
+  for (int i=0; i<11; i++){
+    a[i] = zmin + (float(zmax-zmin)/10)*i;
+  }
+
+//movLegs(RFx,RFy,RFz,      RBx,RBy,RBz,    LFx,LFy,LFz,        LBx,LBy,LBz,     div,time);
+//movLegs(RFx,RFy,RFz,      RBx,RBy,RBz,    LFx,LFy,LFz,        LBx,LBy,LBz,     div,time);
+  movLegs(a[9],down2,x,     a[3],down,x,    a[4],down,x,        a[10],up,x,      div,time);
+  movLegs(a[8],down,x,     a[2],down,x,    a[5],down,x,        a[0],up,x,       div,time);
+  movLegs(a[7],down,x,      a[1],down,x,    a[6],down2,x,        a[0],down,x,    div,time);
+  
+  movLegs(a[6],down,x,      a[0],up,x,       a[7],down2,x,       a[1],down,x,     div,time);
+  movLegs(a[5],down,x,      a[10],up,x,     a[8],down,x,       a[2],down,x,     div,time);
+  movLegs(a[4],down,x,      a[10],down2,x,   a[9],down,x,        a[3],down,x,     div,time);
+  
+  movLegs(a[3],down,x,      a[9],down2,x,   a[10],up,x,         a[4],down,x,     div,time);
+  movLegs(a[2],down,x,      a[8],down,x,   a[0],up,x,          a[5],down,x,     div,time);
+  movLegs(a[1],down,x,      a[7],down,x,    a[0],down,x,        a[6],down2,x,     div,time);
+  
+  movLegs(a[0],up,x,        a[6],down,x,    a[1],down,x,        a[7],down2,x,     div,time);
+  movLegs(a[10],up,x,       a[5],down,x,    a[2],down,x,        a[8],down,x,     div,time);
+  movLegs(a[10],down2,x,     a[4],down,x,    a[3],down,x,        a[9],down,x,     div,time);
+}
+
+
+void walk1L(int div, int time){
+  int zmax = 16;
+  int zmin = 3;
+  double x = 11.9;
+  int up = 1;
+  int down = 11;
+  int down2 = 8;
+  
+  float a[11];
+  for (int i=0; i<11; i++){
+    a[i] = zmin + (float(zmax-zmin)/10)*i;
+  }
+
+//movLegs(RFx,RFy,RFz,      RBx,RBy,RBz,    LFx,LFy,LFz,        LBx,LBy,LBz,     div,time);
+  movLegs(a[10],up,x,       a[5],down,x,    a[2],down,x,        a[8],down,x,     div,time);
+  movLegs(a[0],up,x,        a[6],down,x,    a[1],down,x,        a[7],down2,x,     div,time);
+
+  movLegs(a[1],down,x,      a[7],down,x,    a[0],down,x,        a[6],down2,x,     div,time);
+  movLegs(a[2],down,x,      a[8],down,x,   a[0],up,x,          a[5],down,x,     div,time);
+  movLegs(a[3],down,x,      a[9],down2,x,   a[10],up,x,         a[4],down,x,     div,time);
+  
+  movLegs(a[4],down,x,      a[10],down2,x,   a[9],down,x,        a[3],down,x,     div,time);
+  movLegs(a[5],down,x,      a[10],up,x,     a[8],down,x,       a[2],down,x,     div,time);
+  movLegs(a[6],down,x,      a[0],up,x,       a[7],down2,x,       a[1],down,x,     div,time);
+  
+  movLegs(a[7],down,x,      a[1],down,x,    a[6],down2,x,        a[0],down,x,    div,time);
+  movLegs(a[8],down,x,     a[2],down,x,    a[5],down,x,        a[0],up,x,       div,time);
+  movLegs(a[9],down2,x,     a[3],down,x,    a[4],down,x,        a[10],up,x,      div,time);
+  movLegs(a[10],down2,x,     a[4],down,x,    a[3],down,x,        a[9],down,x,     div,time);
+}
+
 
 void walk2(int div, int time){
   int zmax = 14;
@@ -446,89 +520,89 @@ void rotate2(int dir, int div, int time){
 
 void testIK1(int div, int time){
   movLegs(25,2,25,     RBx,RBy,RBz,     LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-  Serial.print("1: ");
-  Serial.print(S_RF1.read());
-  Serial.print(" 2: ");
-  Serial.print(S_RF2.read());
-  Serial.print(" 3: ");
-  Serial.println(S_RF3.read());
+//  Serial.print("1: ");
+//  Serial.print(S_RF1.read());
+//  Serial.print(" 2: ");
+//  Serial.print(S_RF2.read());
+//  Serial.print(" 3: ");
+//  Serial.println(S_RF3.read());
   
   movLegs(18,2,18,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-  Serial.print("1: ");
-  Serial.print(S_RF1.read());
-  Serial.print(" 2: ");
-  Serial.print(S_RF2.read());
-  Serial.print(" 3: ");
-  Serial.println(S_RF3.read());
+//  Serial.print("1: ");
+//  Serial.print(S_RF1.read());
+//  Serial.print(" 2: ");
+//  Serial.print(S_RF2.read());
+//  Serial.print(" 3: ");
+//  Serial.println(S_RF3.read());
 
   movLegs(18,7,18,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-  Serial.print("1: ");
-  Serial.print(S_RF1.read());
-  Serial.print(" 2: ");
-  Serial.print(S_RF2.read());
-  Serial.print(" 3: ");
-  Serial.println(S_RF3.read());
+//  Serial.print("1: ");
+//  Serial.print(S_RF1.read());
+//  Serial.print(" 2: ");
+//  Serial.print(S_RF2.read());
+//  Serial.print(" 3: ");
+//  Serial.println(S_RF3.read());
 
   movLegs(18,2,18,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-  Serial.print("1: ");
-  Serial.print(S_RF1.read());
-  Serial.print(" 2: ");
-  Serial.print(S_RF2.read());
-  Serial.print(" 3: ");
-  Serial.println(S_RF3.read());
+//  Serial.print("1: ");
+//  Serial.print(S_RF1.read());
+//  Serial.print(" 2: ");
+//  Serial.print(S_RF2.read());
+//  Serial.print(" 3: ");
+//  Serial.println(S_RF3.read());
 
   movLegs(25,2,25,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-  Serial.print("1: ");
-  Serial.print(S_RF1.read());
-  Serial.print(" 2: ");
-  Serial.print(S_RF2.read());
-  Serial.print(" 3: ");
-  Serial.println(S_RF3.read());
+//  Serial.print("1: ");
+//  Serial.print(S_RF1.read());
+//  Serial.print(" 2: ");
+//  Serial.print(S_RF2.read());
+//  Serial.print(" 3: ");
+//  Serial.println(S_RF3.read());
   
   movLegs(25,7,25,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-  Serial.print("1: ");
-  Serial.print(S_RF1.read());
-  Serial.print(" 2: ");
-  Serial.print(S_RF2.read());
-  Serial.print(" 3: ");
-  Serial.println(S_RF3.read());
+//  Serial.print("1: ");
+//  Serial.print(S_RF1.read());
+//  Serial.print(" 2: ");
+//  Serial.print(S_RF2.read());
+//  Serial.print(" 3: ");
+//  Serial.println(S_RF3.read());
 
   movLegs(18,7,18,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-  Serial.print("1: ");
-  Serial.print(S_RF1.read());
-  Serial.print(" 2: ");
-  Serial.print(S_RF2.read());
-  Serial.print(" 3: ");
-  Serial.println(S_RF3.read());
+//  Serial.print("1: ");
+//  Serial.print(S_RF1.read());
+//  Serial.print(" 2: ");
+//  Serial.print(S_RF2.read());
+//  Serial.print(" 3: ");
+//  Serial.println(S_RF3.read());
 
   movLegs(18,2,18,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-  Serial.print("1: ");
-  Serial.print(S_RF1.read());
-  Serial.print(" 2: ");
-  Serial.print(S_RF2.read());
-  Serial.print(" 3: ");
-  Serial.println(S_RF3.read());
+//  Serial.print("1: ");
+//  Serial.print(S_RF1.read());
+//  Serial.print(" 2: ");
+//  Serial.print(S_RF2.read());
+//  Serial.print(" 3: ");
+//  Serial.println(S_RF3.read());
 }
 
 
 void testIK2(int div, int time){
-  Serial.println("Centro");
+  //Serial.println("Centro");
   movLegs(13,8,13,     13,8,13,     13,8,13,        13,8,13,    div,time);
-  Serial.print("1: ");
-  Serial.print(S_RF1.read());
-  Serial.print(" 2: ");
-  Serial.print(S_RF2.read());
-  Serial.print(" 3: ");
-  Serial.println(S_RF3.read());
+//  Serial.print("1: ");
+//  Serial.print(S_RF1.read());
+//  Serial.print(" 2: ");
+//  Serial.print(S_RF2.read());
+//  Serial.print(" 3: ");
+//  Serial.println(S_RF3.read());
   delay(300);
-  Serial.println("Derecha");
+//  Serial.println("Derecha");
   movLegs(18,8,0,     18,8,0,     18,8,0,        18,8,0,    div,time);
-    Serial.print("1: ");
-  Serial.print(S_RF1.read());
-  Serial.print(" 2: ");
-  Serial.print(S_RF2.read());
-  Serial.print(" 3: ");
-  Serial.println(S_RF3.read());
+//    Serial.print("1: ");
+//  Serial.print(S_RF1.read());
+//  Serial.print(" 2: ");
+//  Serial.print(S_RF2.read());
+//  Serial.print(" 3: ");
+//  Serial.println(S_RF3.read());
   delay(300);/*
   Serial.println("Centro");
   movLegs(13,8,13,    RBx,RBy,RBz,     LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
@@ -546,10 +620,10 @@ void testIK2(int div, int time){
 
 void testIK3(int div, int time){
   int x = 17;
-  Serial.println("Abajo");
+  //Serial.println("Abajo");
   movLegs(x,5,x,     x,5,x,     x,5,x,        x,5,x,    div,time);
   delay(500);
-  Serial.println("Arriba");
+  //Serial.println("Arriba");
   movLegs(14,11,x,     x,11,x,     x,11,x,        x,11,x,    div,time);
   delay(500);
 }
@@ -565,7 +639,7 @@ void testIK4(int div, int time){
 
 void testIK5(int div, int time){
   movLegs(15,3,-2,        RBx,RBy,RBz,    LFx,LFy,LFz,        LBx,LBy,LBz,   div,time);
-  Serial.println(S_RF2.read());
+  //Serial.println(S_RF2.read());
 }
 // ===================================================================================
 
@@ -714,11 +788,11 @@ void updateLServos(){
     S_LB2.write(max(r2, 90 + offset2LB - IKang2(LBx,LBy,LBz)));
     S_LB3.write((180+offset3LB) - IKang3(LBx,LBy,LBz));
 
-    Serial.print(S_LB1.read());
-    Serial.print(" ");
-    Serial.print(S_LB2.read());
-    Serial.print(" ");
-    Serial.println(S_LB3.read());
+//    Serial.print(S_LB1.read());
+//    Serial.print(" ");
+//    Serial.print(S_LB2.read());
+//    Serial.print(" ");
+//    Serial.println(S_LB3.read());
 }
 
 // Angle for servo 1
@@ -771,6 +845,21 @@ int IKang3(double x, double y, double z){
 void loop() {
 
   readSerial();
+
+  if(s_rot != 0) rotate(s_rot,30,s_sp);
+  if(s_dir != 0){
+    if (s_dir == 1){
+      walk1FW(10,s_sp); 
+    }else if(s_dir == 3){
+      walk1BW(10,s_sp);
+    }else if(s_dir == 2){
+      walk1R(10,s_sp);
+    }else if(s_dir == 4){
+      walk1L(10,s_sp);
+    }
+    
+  }
+  
   /*Serial.print("1: ");
   Serial.print(S_RF1.read());
   Serial.print(" 2: ");
@@ -783,6 +872,6 @@ void loop() {
   //testIK3(50,30);
 
   
-  delay(10);
+  delay(20);
 
 }
