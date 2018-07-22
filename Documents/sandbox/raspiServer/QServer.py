@@ -42,7 +42,8 @@ class QServer:
 						'p': self.ping,		# Ping
 						'w': self.walk,		# Walk
 						'r': self.rot,		# rot
-						'q': self.setPos	# wakeup or sleep
+						'q': self.setPos,	# wakeup or sleep
+						'c': self.setCam
 						}
 		
 		
@@ -93,17 +94,18 @@ class QServer:
 					self.ser.write(k+str(self.SVar[k])+';')
 					wait = True
 					
-					if k == 'w':
-						self.SVar['w']  = 0
-						self.prevSVar['w']  = 0
-					if k == 'r':
-						self.SVar['r']  = 0
-						self.prevSVar['r']  = 0
+					# if k == 'w':
+						# self.SVar['w']  = 0
+						# self.prevSVar['w']  = 0
+					# if k == 'r':
+						# self.SVar['r']  = 0
+						# self.prevSVar['r']  = 0
 
 				self.varLock.release()
 				if wait:
 					print self.ser.readline()  				# Wait for arduino ready
 					wait = False
+			time.sleep(0.05)
 			
 
 		
@@ -111,8 +113,6 @@ class QServer:
 	# Listen and update state variables
 	def runServer(self):
 		while True:
-
-			
 		
 			data, addr = self.sock.recvfrom(255)
 
@@ -129,7 +129,6 @@ class QServer:
 					self.headers[h](body)
 
 			
-			
 	
 	
 	def ping(self, body):
@@ -145,6 +144,12 @@ class QServer:
 	def walk(self, body):
 		self.varLock.acquire()
 		self.SVar['w']  = body[0]
+		self.varLock.release()
+		
+		
+	def setCam(self, body):
+		self.varLock.acquire()
+		self.SVar['c']  = body
 		self.varLock.release()
 		
 	
