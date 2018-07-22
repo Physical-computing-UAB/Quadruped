@@ -48,7 +48,7 @@ class W1:
 		self.steps.set(1)
 
 		self.dir = 0
-		self.rotation = 0
+		self.rot = 0
 		
 		self.camV = IntVar()
 		self.camV.set(90)
@@ -362,8 +362,13 @@ class W1:
 				
 		self.toSend.clear()
 	
-		self.dir = 0
-		self.rot = 0
+		if self.dir != 0:
+			self.dir = 0
+			self.toSend.add('dir')
+		
+		if self.rot != 0:
+			self.rot = 0
+			self.toSend.add('rot')
 		
 		self.root.after(500, self.send)
 		
@@ -478,51 +483,6 @@ class W1:
 		self.root.after(80, self.handleKeyActions)
 	
 	# ====================================================================
-			
-	
-	
-	def send_pos(self, *args):
-		
-		if(args[0] == None):
-		
-			possI = [self.leg_RFx.get(),self.leg_RFy.get(),self.leg_RFz.get(),
-					self.leg_LFx.get(),self.leg_LFy.get(),self.leg_LFz.get(),
-					self.leg_RBx.get(),self.leg_RBy.get(),self.leg_RBz.get(),
-					self.leg_LBx.get(),self.leg_LBy.get(),self.leg_LBz.get()]
-		
-			for i in range(12):
-				if not isinstance(possI[i], int):
-					possI = None
-					break
-		else:
-			possI = args[0]
-		
-		if possI != None:
-			
-			possS = []
-			msg = ""
-			for i in range(12):
-				ii = possI[i]
-				ss = ""
-				
-				if (ii>=0):
-					ss=ss+"+"
-				elif (ii<0):
-					ss=ss+"-"
-				
-				if(abs(ii) < 10):
-					ss=ss+"0"
-				
-				ss=ss+str(abs(ii))
-				possS.append(ss)
-				msg = msg+ss
-			
-			
-			print msg
-			if (self.mode == 1):
-				self.ser.write("ss" + msg + ";")
-			elif (self.mode == 2):
-				self.sock.sendto('ss'+msg+';', (self.ip, self.port))
 
 	
 	
@@ -560,7 +520,7 @@ class Sender:
 		th.start()
 	
 	def ping(self):
-		self.sock.sendto(self.headers['ping']+';', (self.ip, self.port))
+		self.sock.sendto(self.headers['ping'], (self.ip, self.port))
 		try:
 			data, addr = self.sock.recvfrom(128)
 			if self.con == False:
@@ -581,12 +541,7 @@ class Sender:
 		th.start()
 		
 	def walk(self, dir):
-		self.sock.sendto(self.headers['walk']+str(dir)+';', (self.ip, self.port))
-		try:
-			data, addr = self.sock.recvfrom(128)
-			return True
-		except:
-			return False
+		self.sock.sendto(self.headers['walk']+str(dir), (self.ip, self.port))
 	# ---------------------------------
 	
 	
@@ -596,12 +551,7 @@ class Sender:
 		th.start()
 		
 	def rot(self, rot):
-		self.sock.sendto(self.headers['rot']+str(rot)+';', (self.ip, self.port))
-		try:
-			data, addr = self.sock.recvfrom(128)
-			return True
-		except:
-			return False
+		self.sock.sendto(self.headers['rot']+str(rot), (self.ip, self.port))
 	# ---------------------------------
 	
 	
@@ -611,12 +561,7 @@ class Sender:
 		th.start()
 		
 	def wu(self):
-		self.sock.sendto(self.headers['pos']+self.headers['wakeup']+';', (self.ip, self.port))
-		try:
-			data, addr = self.sock.recvfrom(128)
-			return True
-		except:
-			return False
+		self.sock.sendto(self.headers['pos']+self.headers['wakeup'], (self.ip, self.port))
 	# ---------------------------------
 	
 	
@@ -626,12 +571,7 @@ class Sender:
 		th.start()
 		
 	def slp(self):
-		self.sock.sendto(self.headers['pos']+self.headers['sleep']+';', (self.ip, self.port))
-		try:
-			data, addr = self.sock.recvfrom(128)
-			return True
-		except:
-			return False
+		self.sock.sendto(self.headers['pos']+self.headers['sleep'], (self.ip, self.port))
 	# ---------------------------------
 	
 	
@@ -641,12 +581,7 @@ class Sender:
 		th.start()
 		
 	def speed(self, sp):
-		self.sock.sendto(self.headers['speed']+str(sp)+';', (self.ip, self.port))
-		try:
-			data, addr = self.sock.recvfrom(128)
-			return True
-		except:
-			return False
+		self.sock.sendto(self.headers['speed']+str(sp), (self.ip, self.port))
 	# ---------------------------------
 	
 	
@@ -656,12 +591,7 @@ class Sender:
 		th.start()
 		
 	def steps(self, st):
-		self.sock.sendto(self.headers['steps']+str(st)+';', (self.ip, self.port))
-		try:
-			data, addr = self.sock.recvfrom(128)
-			return True
-		except:
-			return False
+		self.sock.sendto(self.headers['steps']+str(st), (self.ip, self.port))
 	# ---------------------------------
 	
 	
@@ -689,12 +619,7 @@ class Sender:
 		else:
 			msg += str(invangV)
 		
-		self.sock.sendto(self.headers['cam']+msg+';', (self.ip, self.port))
-		try:
-			data, addr = self.sock.recvfrom(128)
-			return True
-		except:
-			return False
+		self.sock.sendto(self.headers['cam']+msg, (self.ip, self.port))
 	# ---------------------------------
 	
 	
@@ -711,6 +636,3 @@ if (__name__ == "__main__"):
 		ip   = str(sys.argv[1])
 		port = int(sys.argv[2])
 		w1 = W1(ip, port)
-
-
-	w1 = W1()
