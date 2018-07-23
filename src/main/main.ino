@@ -11,10 +11,9 @@ void setup() {
   Serial.println("setup(...)");
   
   // 1.- Initialize the peripherials of the robot.
-  Serial.println("init...");
-  
+  Serial.println("Initialiting robot.");
   Robot->init();
-  Serial.println("done init...");
+  Serial.println("+Done init...");
 }
 
 void loop() // The robot will be always running once it has been initialized

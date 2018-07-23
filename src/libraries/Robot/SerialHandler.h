@@ -13,7 +13,7 @@ class SerialHandler{
 		~SerialHandler(){};
 		char readSerial(String &msg);	// Read serial if available. Rturn true if available, false if not
 
-  
+
 	private:
 
 		String serialBuffer = "";  // Buffer for serial comunication

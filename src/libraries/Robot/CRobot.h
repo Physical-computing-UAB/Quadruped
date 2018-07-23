@@ -5,23 +5,17 @@
 #include <Arduino.h>
 #include <UltrasonicSensor.h>
 #include "SerialHandler.h"
-#include "RedState.h"
 #include <vector>
+#include "IKEngine.h"
+#include <Servo.h>
 
 // Peripherics
-
-//
 typedef struct{
-  // R
-  int pinR;
-  int valueR;
-  // G
-  int pinG;
-  int valueG;
-  // B
-  int pinB;
-  int valueB;
-}RGBL;
+    int alpha = 0;
+    int beta = 0;
+    Servo pan;
+    Servo tilt;
+} Camera;
 
 class CMachineState;
 class CRobot {
@@ -32,7 +26,6 @@ public:
     if (s_pInstance == 0)
     {
       Serial.println("Making place for Robot");
-      //s_pInstance = (CRobot*) malloc(sizeof(CRobot));
       s_pInstance = new CRobot();
     }
     return s_pInstance;
@@ -52,10 +45,12 @@ public:
   void popState();
 
   // === Getters & Setters ===
-  // Peripherics
-  RGBL getPLED() const { return p_led;};
+  // === Getters ===
   UltrasonicSensorArray* getUSA() const { return m_usArray; };
-
+  IKEngine* getIKEngine() { return m_IKEngine; };
+  Camera* getCamera() { return m_camera; };
+  Coordinate getTarget() const { return m_target; };
+  // === Setters ===
   void setUltrasonicSA( UltrasonicSensorArray* pUlrasonicSA ){ m_usArray = pUlrasonicSA; }const;
 
 private:
@@ -66,12 +61,14 @@ private:
 
   // === Attributes ===
   std::vector<CMachineState*> m_mindStates; // Stack
-  UltrasonicSensorArray* m_usArray;
-
   SerialHandler m_serialHandler;
 
   // Peripherics
-  RGBL p_led;
+  UltrasonicSensorArray* m_usArray;
+  IKEngine* m_IKEngine;
+
+  Camera* m_camera;
+  Coordinate m_target;
 };
 
 typedef CRobot TheRobot;

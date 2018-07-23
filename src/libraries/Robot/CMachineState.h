@@ -12,6 +12,7 @@ class CMachineState
     ~CMachineState(){};
 
     // Generic functions
+    virtual void handleEvents() = 0;
     virtual void update() = 0;
     virtual void run() = 0;
 
@@ -26,7 +27,7 @@ class CMachineState
     void setActiveState(bool pActive) { m_isActive = pActive; };
   protected:
       bool m_isActive;
-
+      // Coordinate m_target;
       //int (*m_map)[MAX_MATRIX_SIZE][MAX_MATRIX_SIZE];
 };
 
