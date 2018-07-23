@@ -81,7 +81,7 @@ void CRobot::handleEvents()
     case 'c':
     // This command tells the robot to move the camera.
     // msg will contain the angles alpha and beta.
-      int xxx;
+	  int xxx;
       xxx = msg.substring(0,3).toInt();
       int yyy;
       yyy = msg.substring(3).toInt();
@@ -93,21 +93,38 @@ void CRobot::handleEvents()
 
       m_camera->pan.write(m_camera->alpha);
       m_camera->tilt.write(m_camera->beta);
-    break;
-    case 'C':
+	  break;
+    case 'm':
     // This command tells the robot to change its state to the desired state
     // msg contains the state identifier:
-    // A: Autonomous
-    // C: Controlled
-      if (msg[0] == 'A')
+    // a: Autonomous
+    // c: Controlled
+      if (msg[0] == 'a')
       {
-        changeState(new CStateAutonom());
-      }else if(msg[0] == 'C')
+		changeState(new CStateAutonom());
+      }else if(msg[0] == 'c')
       {
         changeState(new CStateControlled());
       }
-    break;
-    break;
+      break;
+    case 'r':
+	// This command tells the robot to rotate
+    // msg contains the direction:
+    // 1: Right    -1: Left
+	  break;
+	case 'w':
+	// This command tells the robot to walk
+    // msg contains the direction:
+    // 0: stop   1: forward   2: Right   3: backward   4: left
+	  int x_dir;
+	  x_dir	  = msg.substring(0,1).toInt();
+	  m_IKEngine->setDir(x_dir);
+	  break;
+	case 'q':
+	// This command tells the robot to stand up or sit
+    // msg contains the direction:
+    // 0: sit   1: stand up
+	  break;
     default:
         Serial.println("Comfortably numb");
   }
