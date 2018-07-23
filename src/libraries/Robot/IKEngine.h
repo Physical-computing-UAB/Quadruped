@@ -91,13 +91,8 @@ class IKEngine {
 		Servo S_RB1, S_RB2, S_RB3;
 		Servo S_LB1, S_LB2, S_LB3;
 
-		int walk_state;		// States of the walk cycle [0,1,2,3]
-		int walk_cycle;		// Walk cycle number [0,...,MovDiv]
-		double inc_x;		// Increment to add to the legs coordinates each iteration
-		double inc_y;		// Increment to add to the legs coordinates each iteration
 
-
-		// -- State variables --
+		// --- State variables ---
 		int walk_mode;	// Switch between different modes
 		double m_div;	// Division of the walk cycle (Speed of the movements)
 		int dir;	// 0, 1, 2, 3, 4 (stop, forward, right, left, back)
@@ -111,34 +106,35 @@ class IKEngine {
 
 
 
-		// -- Private methods --
+		// --- Private methods ---
 		void initPositions();
 		int movLegs(double ** coordsMatrix, int index);
 		void standUp();
 		void walk();		// Calculates the legs coordinates
 		void writeServos(); 	// Write the angles to the servos
 
-		// -- movLegs variables --
+		// --- movLegs variables ---
+		int walk_state;		// States of the walk cycle [0,1,2,3]
 		int mv_cycle;
-		double mv_inc[12];
+		double mv_inc[12];  // Increment to be added to the current leg position to reach the destination in "m_div" movements
 
 
 
 		// Walk1 coordinates matrix
 		double ** W1_CoordsMatrix;
 		double C_W1_CoordsMatrix[12][12] =
-		{{14,9,4.1,     14,4,16,     14,6,14.3,       14,9,5.8},
-		{14,9,2.4,      14,4,-1,     14,6,12.6,       14,9,7.5},
-		{14,9,0.7,      14,9,-1,     14,9,10.9,       14,9,9.2},
-		{14,4,-1,       14,9,0.7,    14,9,9.2,        14,6,10.9},
-		{14,4,16,       14,9,2.4,    14,9,7.5,        14,6,12.6},
-		{14,9,16,       14,9,4.1,    14,9,5.8,        14,9,14.3},
-		{14,6,14.3,     14,9,5.8,    14,9,4.1,        14,4,16},
-		{14,6,12.6,     14,9,7.5,    14,9,2.4,        14,4,-1},
-		{14,9,10.9,     14,9,9.2,    14,9,0.7,        15,9,-1},
-		{14,9,9.2,      14,6,10.9,   14,4,-1,         14,9,0.7},
-		{14,9,7.5,      14,6,12.6,   14,4,16,         14,9,2.4},
-		{14,9,5.8,      14,9,14.3,   14,9,16,         14,9,4.1}};
+		{{12,11,4.9,    12,1,14,      12,8,12.7,     12,11,6.2}, 
+		{12,11,3.6,     12,1,1,       12,8,11.4,     12,11,7.5}, 
+		{12,11,2.3,     12,11,1,      12,11,10.1,    12,11,8.8}, 
+		{12,1,1,        12,11,2.3,    12,11,8.8,     12,8,10.1}, 
+		{12,1,14,       12,11,3.6,    12,11,7.5,     12,8,11.4}, 
+		{12,11,14,      12,11,4.9,    12,11,6.2,     12,11,12.7}, 
+		{12,8,12.7,     12,11,6.2,    12,11,4.9,     12,1,14},  
+		{12,8,11.4,     12,11,7.5,    12,11,3.6,     12,1,1},   
+		{12,11,10.1,    12,11,8.8,    12,11,2.3,     12,11,1},
+		{12,11,8.8,     12,8,10.1,    12,1,1,        12,11,2.3}, 
+		{12,11,7.5,     12,8,11.4,    12,1,14,       12,11,3.6}, 
+		{12,11,6.2,     12,11,12.7,   12,11,14,      12,11,4.9}};
 
 
 
