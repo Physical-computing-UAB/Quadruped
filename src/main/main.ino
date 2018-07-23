@@ -7,7 +7,7 @@ const int DELAY_TIME = 2000; // Time to think
 CRobot* Robot = CRobot::Instance();;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("setup(...)");
   
   // 1.- Initialize the peripherials of the robot.
