@@ -1,10 +1,10 @@
 #include <ArduinoSTL.h>
 #include <CRobot.h>
 
-const int DELAY_TIME = 2000; // Time to think 
+const int DELAY_TIME = 200; // Time to think 
 
 // Create instance of the robot.
-CRobot* Robot = CRobot::Instance();;
+CRobot* Robot = CRobot::Instance();
 
 void setup() {
   Serial.begin(115200);
