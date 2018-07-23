@@ -109,9 +109,13 @@ void IKEngine::setDiv(double pdiv)
 	m_div = pdiv;
 }
 
-void IKEngine::setDir(int dir)
+void IKEngine::setDir(int pdir)
 {
-	dir = dir;
+	if (dir != pdir){
+		dir = pdir;
+		walk_state = 0;
+		mv_cycle = 0;
+	}
 }
 
 void IKEngine::setRotation(int deg)
@@ -135,10 +139,10 @@ void IKEngine::updateIK()
 	switch(dir)
 	{
 		case 1: // Forward
-			if (movLegs(W1_CoordsMatrix, walk_cycle) == 1)
+			if (movLegs(W1_CoordsMatrix, walk_state) == 1)
 			{
-				if (walk_cycle<11) walk_cycle++;
-				else walk_cycle = 0;
+				if (walk_state<11) walk_state++;
+				else walk_state = 0;
 			}
 
 		}
@@ -310,6 +314,7 @@ void IKEngine::standUp()
 // Linearly move all legs to the given coordinates
 int IKEngine::movLegs(double ** coordsMatrix, int index){
 
+	// Objective coords
 	double t_RFx = coordsMatrix[index][0];
 	double t_RFy = coordsMatrix[index][1];
 	double t_RFz = coordsMatrix[index][2];
@@ -324,8 +329,10 @@ int IKEngine::movLegs(double ** coordsMatrix, int index){
 	double t_LBz = coordsMatrix[index][11];
 
 
+	// The first call (mv_cycle == 0) calculate the Increment to be added to 
+	// the current position, to reach the destination, in "m_div" movements
 	if (mv_cycle == 0){
-		mv_inc[0] = (t_RFx - RFx)/double(m_div);  // Increment to be added to the current position to reach the destination in "m_div" movements
+		mv_inc[0] = (t_RFx - RFx)/double(m_div);
 		mv_inc[1] = (t_RFy - RFy)/double(m_div);
 		mv_inc[2] = (t_RFz - RFz)/double(m_div);
 		mv_inc[3] = (t_RBx - RBx)/double(m_div);
@@ -339,6 +346,7 @@ int IKEngine::movLegs(double ** coordsMatrix, int index){
 		mv_inc[11] = (t_LBz - LBz)/double(m_div);
 	}
 
+	// Increment the current position
     RFx += mv_inc[0];
     RFy += mv_inc[1];
     RFz += mv_inc[2];
@@ -354,7 +362,7 @@ int IKEngine::movLegs(double ** coordsMatrix, int index){
 
     //writeServos();
 
-	if (mv_cycle > m_div){
+	if (mv_cycle < m_div){
 		mv_cycle++;
 		return 0;
 	} else return 1;
@@ -364,11 +372,11 @@ int IKEngine::movLegs(double ** coordsMatrix, int index){
 // Write the angles to the servos
 void IKEngine::writeServos()
 {
-		// Safe servo angle limits
-		int r2 = 25;
-		int l2 = 135;
+	// Safe servo angle limits
+	int r2 = 25;
+	int l2 = 135;
     // Set the servos to their coords with IK functions
-		S_RF1.write(180 - (offset1RF + IKang1(RFx,RFy,RFz)));
+	S_RF1.write(180 - (offset1RF + IKang1(RFx,RFy,RFz)));
     S_RF2.write(max(r2, 90 + offset2RF - IKang2(RFx,RFy,RFz)));
     S_RF3.write((180+offset3RF) - IKang3(RFx,RFy,RFz));
 
