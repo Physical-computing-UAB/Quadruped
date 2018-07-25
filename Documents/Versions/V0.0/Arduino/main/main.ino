@@ -73,9 +73,11 @@ int l2 = 135;
 
 
 // ======================== State variables ====================================================
-int s_dir = 0;
-int s_rot = 0;
-int s_sp = 10;
+int s_dir = 0;    // Direction to walk
+int s_rot = 0;    // Direction to rotate
+int s_sp = 10;    // Speed
+int s_steps = 1;  // Steps
+int s_ac = 0;   // Anti Colision
 // ===================================================================================
 
 
@@ -87,18 +89,6 @@ void setup() {
   S_camH.attach(46);
   S_camV.attach(48);
   
-  /*S_RF1.attach(2);
-  S_RF2.attach(3);
-  S_RF3.attach(4);
-  S_LF1.attach(5);
-  S_LF2.attach(6);
-  S_LF3.attach(7);
-  S_RB1.attach(8);
-  S_RB2.attach(9);
-  S_RB3.attach(10);
-  S_LB1.attach(11);
-  S_LB2.attach(12);
-  S_LB3.attach(13);*/
   S_RF1.attach(22);
   S_RF2.attach(24);
   S_RF3.attach(26);
@@ -130,7 +120,6 @@ void setup() {
   LBz = 12;
 
   movLegs(RFx,RFy,RFz, RBx,RBy,RBz, LFx,LFy,LFz, LBx,LBy,LBz, 10,10);
-  //wakeup(50,20);
 }
 // ===================================================================================
 
@@ -145,13 +134,11 @@ void updateCServos(){
 }
 
 void changePos(String var){
-  
   int xx = var.substring(0,2).toInt();
   int yy = var.substring(2).toInt();
 
   movLegs(xx,yy,xx,      xx,yy,xx,    xx,yy,xx,        xx,yy,xx,     10,50);
-
-  
+ 
 }
 
 
@@ -170,11 +157,6 @@ void controlCamera(String var){
   updateCServos();
 }
 
-
-void test(String var){
-  rotate2(1,30,30);
-}
-
 void setpos(String var){
   int x = var.substring(0,1).toInt();
   if (x == 0) sit(30,30);
@@ -191,25 +173,9 @@ void ww(String var){
   int x = var.substring(0,1).toInt();
 
   s_dir = x;
-  
-//  if (x == 1){
-//    walk1FW(10,10); 
-//  }else if(x == 3){
-//    walk1BW(10,10);
-//  }else if(x == 2){
-//    walk1R(10,10);
-//  }else if(x == 4){
-//    walk1L(10,10);
-//  }
 }
 
 void setLegsPos(String var){
-
-  /*Serial.print(LBx);
-  Serial.print(" ");
-  Serial.print(LBy);
-  Serial.print(" ");
-  Serial.println(LBz);*/
 
   RFx = var.substring(0,3).toInt();
   RFy = var.substring(3,6).toInt();
@@ -229,12 +195,18 @@ void setLegsPos(String var){
 
   updateLServos();
   
-  /*Serial.print(LBx);
-  Serial.print(" ");
-  Serial.print(LBy);
-  Serial.print(" ");
-  Serial.println(LBz);*/
-  
+}
+
+void setSp(String var){
+  s_sp = var.toInt();
+}
+
+void setSt(String var){
+  s_steps = var.toInt();
+}
+
+void setAC(String var){
+  s_ac = var.toInt();
 }
 
 // ===================================================================================
@@ -258,22 +230,19 @@ void readSerial(){
       if(serialHeader == "c"){   // Camera control
         controlCamera(serialBody);
       }else
-      if(serialHeader == "t"){   // Test
-        test(serialBody);
-      }else
-      if(serialHeader == "r"){
+      if(serialHeader == "r"){  // Rotate
         rr(serialBody);
       }else
       if(serialHeader == "i"){
         changePos(serialBody);
       }else
-      if(serialHeader == "w"){
+      if(serialHeader == "w"){  // walk
         ww(serialBody);
       }else
       if(serialHeader == "s"){
         setLegsPos(serialBody);
       }else
-      if(serialHeader == "q"){
+      if(serialHeader == "q"){  // Position
         setpos(serialBody);
       }
   
@@ -287,8 +256,6 @@ void readSerial(){
       serialBuffer += received; //Add the received char to the buffer
     }
   }
-  // Send Arduino Ready signal
-   //Serial.println("1");
 }
 // ===================================================================================
 
@@ -512,7 +479,6 @@ void rotate2(int dir, int div, int time){
   movLegs(RFx,RFy,RFz,      RBx,RBy,RBz,    LFx,down,LFz,        LBx,LBy,LBz,     div,time);
 
   rot(-rotation*dir,rotation*dir,rotation*dir,-rotation*dir,   div,time);
-
   
 }
 
@@ -520,102 +486,22 @@ void rotate2(int dir, int div, int time){
 
 void testIK1(int div, int time){
   movLegs(25,2,25,     RBx,RBy,RBz,     LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-//  Serial.print("1: ");
-//  Serial.print(S_RF1.read());
-//  Serial.print(" 2: ");
-//  Serial.print(S_RF2.read());
-//  Serial.print(" 3: ");
-//  Serial.println(S_RF3.read());
-  
   movLegs(18,2,18,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-//  Serial.print("1: ");
-//  Serial.print(S_RF1.read());
-//  Serial.print(" 2: ");
-//  Serial.print(S_RF2.read());
-//  Serial.print(" 3: ");
-//  Serial.println(S_RF3.read());
-
   movLegs(18,7,18,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-//  Serial.print("1: ");
-//  Serial.print(S_RF1.read());
-//  Serial.print(" 2: ");
-//  Serial.print(S_RF2.read());
-//  Serial.print(" 3: ");
-//  Serial.println(S_RF3.read());
-
   movLegs(18,2,18,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-//  Serial.print("1: ");
-//  Serial.print(S_RF1.read());
-//  Serial.print(" 2: ");
-//  Serial.print(S_RF2.read());
-//  Serial.print(" 3: ");
-//  Serial.println(S_RF3.read());
-
   movLegs(25,2,25,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-//  Serial.print("1: ");
-//  Serial.print(S_RF1.read());
-//  Serial.print(" 2: ");
-//  Serial.print(S_RF2.read());
-//  Serial.print(" 3: ");
-//  Serial.println(S_RF3.read());
-  
   movLegs(25,7,25,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-//  Serial.print("1: ");
-//  Serial.print(S_RF1.read());
-//  Serial.print(" 2: ");
-//  Serial.print(S_RF2.read());
-//  Serial.print(" 3: ");
-//  Serial.println(S_RF3.read());
-
   movLegs(18,7,18,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-//  Serial.print("1: ");
-//  Serial.print(S_RF1.read());
-//  Serial.print(" 2: ");
-//  Serial.print(S_RF2.read());
-//  Serial.print(" 3: ");
-//  Serial.println(S_RF3.read());
-
   movLegs(18,2,18,      RBx,RBy,RBz,      LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-//  Serial.print("1: ");
-//  Serial.print(S_RF1.read());
-//  Serial.print(" 2: ");
-//  Serial.print(S_RF2.read());
-//  Serial.print(" 3: ");
-//  Serial.println(S_RF3.read());
+
 }
 
 
 void testIK2(int div, int time){
-  //Serial.println("Centro");
   movLegs(13,8,13,     13,8,13,     13,8,13,        13,8,13,    div,time);
-//  Serial.print("1: ");
-//  Serial.print(S_RF1.read());
-//  Serial.print(" 2: ");
-//  Serial.print(S_RF2.read());
-//  Serial.print(" 3: ");
-//  Serial.println(S_RF3.read());
   delay(300);
-//  Serial.println("Derecha");
   movLegs(18,8,0,     18,8,0,     18,8,0,        18,8,0,    div,time);
-//    Serial.print("1: ");
-//  Serial.print(S_RF1.read());
-//  Serial.print(" 2: ");
-//  Serial.print(S_RF2.read());
-//  Serial.print(" 3: ");
-//  Serial.println(S_RF3.read());
-  delay(300);/*
-  Serial.println("Centro");
-  movLegs(13,8,13,    RBx,RBy,RBz,     LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-    delay(300);
-  Serial.println("Izquierda");
-  movLegs(0,8,18,     RBx,RBy,RBz,     LFx,LFy,LFz,        LBx,LBy,LBz,    div,time);
-    Serial.print("1: ");
-  Serial.print(S_RF1.read());
-  Serial.print(" 2: ");
-  Serial.print(S_RF2.read());
-  Serial.print(" 3: ");
-  Serial.println(S_RF3.read());
-  delay(300);*/
+  delay(300);
 }
 
 void testIK3(int div, int time){
@@ -787,32 +673,16 @@ void updateLServos(){
     S_LB1.write(180 - (offset1LB + IKang1(LBx,LBy,LBz)));
     S_LB2.write(max(r2, 90 + offset2LB - IKang2(LBx,LBy,LBz)));
     S_LB3.write((180+offset3LB) - IKang3(LBx,LBy,LBz));
-
-//    Serial.print(S_LB1.read());
-//    Serial.print(" ");
-//    Serial.print(S_LB2.read());
-//    Serial.print(" ");
-//    Serial.println(S_LB3.read());
 }
 
 // Angle for servo 1
 int IKang1(double x, double y, double z){
   double gamma = atan2(z, x);
-  //Serial.println(gamma*TODEG);
   return (gamma * TODEG);
 }
 
 // Angle for servo 2
 int IKang2(double x, double y, double z){
-  /*double g = atan2(z, x);
-  double xz = (x-coxa)*cos(g) + (z-coxa)*sin(g);
-  double hip = sqrt( pow(y,2) + pow((xz),2));
-  
-  double alpha1 = acos(y/hip);
-  double alpha2 = acos( (pow(femur, 2) + pow(hip,2) - pow(tibia,2))/(2*femur*hip));
-  double alpha = alpha1 + alpha2;
-  //Serial.println(alpha*TODEG);*/
-
   double h = sqrt((x*x) + (z*z)) - coxa;
   double a0 = atan2(h,y);
   double a1 = acos( ((femur*femur) + (h*h) + (y*y) - (tibia*tibia)) / (2*femur*sqrt((h*h) + (y*y))));
@@ -824,13 +694,6 @@ int IKang2(double x, double y, double z){
 
 // Angle for servo 3
 int IKang3(double x, double y, double z){
-  /*double g = atan2(z, x);
-  double xz = (x-coxa)*cos(g) + (z-coxa)*sin(g);
-  double hip = sqrt( pow(y,2) + pow((xz),2));
-  
-  double beta = acos(( pow(femur,2) + pow(tibia,2) - pow(hip,2) )/(2*tibia*femur));
-  //Serial.println(beta*TODEG);*/
-
   double h = sqrt((x*x) + (z*z)) - coxa;
 
   double beta = acos(( (tibia*tibia) + (femur*femur) - (y*y) - (h*h) ) / (2*femur*tibia));
@@ -846,8 +709,15 @@ void loop() {
 
   readSerial();
 
-  if(s_rot != 0) rotate(s_rot,30,s_sp);
-  if(s_dir != 0){
+  for (int i=0; i<s_steps; i++){
+    if (s_ac == 1){
+
+    // Comprobar obstaculo
+      
+    }
+    // Rotate
+    if(s_rot != 0) rotate(s_rot,30,s_sp);
+    // Walk
     if (s_dir == 1){
       walk1FW(10,s_sp); 
     }else if(s_dir == 3){
@@ -857,20 +727,7 @@ void loop() {
     }else if(s_dir == 4){
       walk1L(10,s_sp);
     }
-    
   }
-  
-  /*Serial.print("1: ");
-  Serial.print(S_RF1.read());
-  Serial.print(" 2: ");
-  Serial.print(S_RF2.read());
-  Serial.print(" 3: ");
-  Serial.println(S_RF3.read());*/
- //walk1FW(10,10);
- //rotate(1, 30,60); 
-  //walk2(30,10);
-  //testIK3(50,30);
-
   
   delay(20);
 
