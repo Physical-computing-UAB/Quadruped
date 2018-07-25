@@ -75,7 +75,7 @@ int l2 = 135;
 // ======================== State variables ====================================================
 int s_dir = 0;    // Direction to walk
 int s_rot = 0;    // Direction to rotate
-int s_sp = 10;    // Speed
+int s_sp = 15;    // Speed
 int s_steps = 1;  // Steps
 int s_ac = 0;   // Anti Colision
 // ===================================================================================
@@ -86,7 +86,7 @@ void setup() {
   Serial.begin(115200);
 
   // Attach servos
-  S_camH.attach(46);
+  /*S_camH.attach(46);
   S_camV.attach(48);
   
   S_RF1.attach(22);
@@ -100,7 +100,7 @@ void setup() {
   S_RB3.attach(38);
   S_LB1.attach(40);
   S_LB2.attach(42);
-  S_LB3.attach(44);
+  S_LB3.attach(44);*/
 
   // Init coords
   RFx = 12;
@@ -205,7 +205,7 @@ void setSt(String var){
   s_steps = var.toInt();
 }
 
-void setAC(String var){
+void setAc(String var){
   s_ac = var.toInt();
 }
 
@@ -244,6 +244,15 @@ void readSerial(){
       }else
       if(serialHeader == "q"){  // Position
         setpos(serialBody);
+      }else
+      if(serialHeader == "v"){  // Speed
+        setSp(serialBody);
+      }else
+      if(serialHeader == "t"){  // Steps
+        setSt(serialBody);
+      }else
+      if(serialHeader == "a"){  // Anti colision
+        setAc(serialBody);
       }
   
       // Clear the buffer
@@ -712,20 +721,22 @@ void loop() {
   for (int i=0; i<s_steps; i++){
     if (s_ac == 1){
 
-    // Comprobar obstaculo
+    // Comprobar obstaculo, s_dir = 0; y break;
       
     }
     // Rotate
     if(s_rot != 0) rotate(s_rot,30,s_sp);
     // Walk
-    if (s_dir == 1){
-      walk1FW(10,s_sp); 
-    }else if(s_dir == 3){
-      walk1BW(10,s_sp);
-    }else if(s_dir == 2){
-      walk1R(10,s_sp);
-    }else if(s_dir == 4){
-      walk1L(10,s_sp);
+    if (s_dir != 0){
+      if (s_dir == 1){
+        walk1FW(10,s_sp); 
+      }else if(s_dir == 3){
+        walk1BW(10,s_sp);
+      }else if(s_dir == 2){
+        walk1R(10,s_sp);
+      }else if(s_dir == 4){
+        walk1L(10,s_sp);
+      }
     }
   }
   
