@@ -118,27 +118,27 @@ void UltrasonicSensorArray::init_sensors()
 
 void UltrasonicSensorArray::init_matrices()
 {
-  Serial.println("Init matrices");
+  //Serial.println("Init matrices");
   // Init matrix A and its transpose
   m_A[0][0] = -1; m_A[0][1] = 1; m_A[0][2] = 0;
   m_A[1][0] = 0; m_A[1][1] = -1; m_A[1][2] = 1;
   mat_transpose(m_A, m_Atr, 2, 3); // A = A'
-  Serial.println("A:");
-  mat_display2x2(m_Atr, 3, 2);
+  //Serial.println("A:");
+  //mat_display2x2(m_Atr, 3, 2);
 
   // Init matrix C and its inverse
   mat_multiply(m_A, m_Atr, m_C, 2, 3, 3, 2); // C = gAA'
-  Serial.println("C:");
-  mat_display2x2(m_C, 2, 2);
+  //Serial.println("C:");
+  //mat_display2x2(m_C, 2, 2);
   m_C[0][0] *= pow(m_noiseAmp, 2);
   m_C[0][1] *= pow(m_noiseAmp, 2);
   m_C[1][0] *= pow(m_noiseAmp, 2);
   m_C[1][1] *= pow(m_noiseAmp, 2);
-  Serial.println("C:");
-  mat_display2x2(m_C, 2, 2);
+  //Serial.println("C:");
+  //mat_display2x2(m_C, 2, 2);
   mat_inverse2x2(m_C, m_Cinv);
-  Serial.println("Cinv:");
-  mat_display2x2(m_Cinv, 2, 2);
+  //Serial.println("Cinv:");
+  //mat_display2x2(m_Cinv, 2, 2);
 
   // Distances between sensors and Nominal Position m_nominalP and their angles;
   float d = 10;
@@ -164,7 +164,7 @@ void UltrasonicSensorArray::init_matrices()
   m_H[1][0] = (cos(angle_2_nominalP) - cos(angle_1_nominalP))/m_c;
   m_H[1][1] = (sin(angle_2_nominalP) - sin(angle_1_nominalP))/m_c;
   mat_transpose2x2(m_H, m_Htr, 2, 2);
-  mat_display2x2(m_H, 2, 2);
+  //mat_display2x2(m_H, 2, 2);
 
   delay(1000);
 }
