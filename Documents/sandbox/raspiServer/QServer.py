@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import socket
-import serial
 import sys
 import time
 import threading
@@ -28,14 +27,16 @@ class QServer:
 					'w': 0,		# dir
 					'r': 0,		# rot
 					'q': 0,		# pos
-					's': 1,		# speed
+					'v': 1,		# speed
 					't': 1,			# steps
 					'c': '090090',	# camera pos
-					'm': 0		# mode
+					'm': 0,		# mode
+					'a': 0		# anti colision
 					}
 					
 		self.prevSVar = self.SVar.copy()
-		
+		self.wTo0 = False
+		self.rTo0 = False
 		
 		# Message headers and functions to call when receive it
 		self.headers = {
@@ -43,7 +44,10 @@ class QServer:
 						'w': self.walk,		# Walk
 						'r': self.rot,		# rot
 						'q': self.setPos,	# wakeup or sleep
-						'c': self.setCam
+						'c': self.setCam,	# camera position
+						'a': self.setAc,	# anti colision
+						'v': self.setSpeed,	# Speed
+						't': self.setSteps	# Steps
 						}
 		
 		
@@ -93,18 +97,17 @@ class QServer:
 					print 'serial',k+str(self.SVar[k])+';'	#ser.write(k+str(self.SVar[k])+';')	# Send changed value
 					self.ser.write(k+str(self.SVar[k])+';')
 					wait = True
-					
-					# if k == 'w':
-						# self.SVar['w']  = 0
-						# self.prevSVar['w']  = 0
-					# if k == 'r':
-						# self.SVar['r']  = 0
-						# self.prevSVar['r']  = 0
 
 				self.varLock.release()
 				if wait:
 					print self.ser.readline()  				# Wait for arduino ready
 					wait = False
+			if self.wTo0:
+				self.wTo0 = False
+				self.SVar['w'] = 0
+			if self.rTo0:
+				self.rTo0 = False
+				self.SVar['r'] = 0
 			time.sleep(0.05)
 			
 
@@ -124,9 +127,13 @@ class QServer:
 			
 			print header, body
 			
-			for h in self.headers.keys():	# Call the right method for the received header
-				if header == h:
-					self.headers[h](body)
+			if header in self.headers.keys():	# Call the right method for the received header
+				if header == 'w' and self.SVar['w'] != 0 and body == 0:
+					self.wTo0 = True
+				elif header == 'r' and self.SVar['r'] != 0 and body == 0:
+					self.rTo0 = True
+				else:
+					self.headers[header](body)
 
 			
 	
@@ -157,8 +164,21 @@ class QServer:
 		self.varLock.acquire()
 		self.SVar['r']  = body
 		self.varLock.release()
-		
-		
+	
+	def setAc(self, body):
+		self.varLock.acquire()
+		self.SVar['a']  = body
+		self.varLock.release()
+	
+	def setSpeed(self, body):
+		self.varLock.acquire()
+		self.SVar['v']  = body
+		self.varLock.release()
+	
+	def setSteps(self, body):
+		self.varLock.acquire()
+		self.SVar['t']  = body
+		self.varLock.release()
 
 	
 	
