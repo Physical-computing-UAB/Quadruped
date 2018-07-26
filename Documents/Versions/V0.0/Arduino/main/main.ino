@@ -761,6 +761,6 @@ void loop() {
     }
   }
   
-  delay(500);
+  delay(20);
 
 }
