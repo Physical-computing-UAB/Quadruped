@@ -1,4 +1,5 @@
- #include <Servo.h>
+#include <UltrasonicSensor.h>
+#include <Servo.h>
 
 float TODEG = 57.3; // Conversion from rad to deg
 
@@ -9,6 +10,9 @@ String serialHeader;       // Header of the message (2 chars)
 String serialBody;         // The body of the message recieved
 // ===================================================================================
 
+// ======================== Camera Servos ============================================
+UltrasonicSensorArray SensorArray = UltrasonicSensorArray(3);
+// ===================================================================================
 
 // ======================== Camera Servos ============================================
 Servo S_camH;   // Horizontal axis servo
@@ -120,6 +124,14 @@ void setup() {
   LBz = 12;
 
   movLegs(RFx,RFy,RFz, RBx,RBy,RBz, LFx,LFy,LFz, LBx,LBy,LBz, 10,10);
+
+  // Setting Echos to OUPUT and Triggers to INPUT mode.
+  SensorArray.init();
+  // Set the pins to each sensor starting in '0'. 
+  // @args: sensor, echo, trigger.
+  SensorArray.setPinsTo(0, 43, 45);
+  SensorArray.setPinsTo(1, 47, 49);
+  SensorArray.setPinsTo(2, 51, 53);
 }
 // ===================================================================================
 
@@ -720,9 +732,16 @@ void loop() {
 
   for (int i=0; i<s_steps; i++){
     if (s_ac == 1){
-
-    // Comprobar obstaculo, s_dir = 0; y break;
-      
+      // Comprobar obstaculo, s_dir = 0; y break;
+      SensorArray.measure();
+      String str = SensorArray.toString();
+      Serial.println(str);
+      int distObj = SensorArray.getDistanceOf(1); // El del medio
+      if (distObj < 20)
+      {
+        s_dir = 0;
+        break;
+      }
     }
     // Rotate
     if(s_rot != 0) rotate(s_rot,30,s_sp);
