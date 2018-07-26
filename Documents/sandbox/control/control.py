@@ -28,6 +28,7 @@ class W1:
 		self.scales = {}
 		self.spinboxs = {}
 		self.text = {}
+		self.checkbuttons = {}
 		
 		self.toSend = set()
 		
@@ -38,11 +39,14 @@ class W1:
 		self.speedMax = 10
 		self.speedMin = 1
 		
-		self.stepsMax = 20
+		self.stepsMax = 10
 		self.stepsMin = 1
 		
 		self.speed = IntVar()
-		self.speed.set(5)
+		self.speed.set(8)
+		
+		self.anticolision = IntVar()
+		self.anticolision.set(0)
 		
 		self.steps = IntVar()
 		self.steps.set(1)
@@ -54,6 +58,10 @@ class W1:
 		self.camV.set(90)
 		self.camH = IntVar()
 		self.camH.set(90)
+		
+		
+		self.wTo0 = False
+		self.rTo0 = False
 		
 		# -------------------------------------------------------------------------	
 		
@@ -71,6 +79,7 @@ class W1:
 		self.steps.trace("w", self.update_st)
 		self.camV.trace("w", self.update_cam)
 		self.camH.trace("w", self.update_cam)
+		self.anticolision.trace("w", self.update_ac)
 
 		self.root.after(1000, self.handleKeyActions)
 		self.root.after(1000, self.send)
@@ -218,11 +227,16 @@ class W1:
 		self.buttons['st'].place(x=500, y=110)
 		
 		self.buttons['auto'] = Button(self.root, text="Auto", borderwidth=4, width=10, command=self.setAuto, relief="raised")
-		self.buttons['auto'].place(x=420, y=200)
+		self.buttons['auto'].place(x=420, y=180)
 		
 		self.buttons['man'] = Button(self.root, text="Manual", borderwidth=4, width=10, command=self.setMan, relief="sunken", state=DISABLED)
-		self.buttons['man'].place(x=500, y=200)
+		self.buttons['man'].place(x=500, y=180)
 		
+		
+		# ------ Checkbuttons ------
+		
+		self.checkbuttons['anticolision'] = Checkbutton(self.root, text="Anti Colision", variable=self.anticolision)
+		self.checkbuttons['anticolision'].place(x = 420, y=220)
 		
 		# ------ Canvas ------
 		
@@ -281,6 +295,8 @@ class W1:
 		self.buttons["si"].config(state=DISABLED)
 		self.buttons["st"].config(state=DISABLED)
 		
+		self.checkbuttons["anticolision"].config(state=DISABLED)
+		
 		self.send()
 		
 		
@@ -302,6 +318,8 @@ class W1:
 		self.buttons["wu"].config(state=ACTIVE)
 		self.buttons["si"].config(state=ACTIVE)
 		self.buttons["st"].config(state=ACTIVE)
+		
+		self.checkbuttons["anticolision"].config(state=ACTIVE)
 		
 		self.send()
 		
@@ -328,10 +346,12 @@ class W1:
 	def setDir(self, *args):
 		self.dir = args[0]
 		self.toSend.add('dir')
+		self.wTo0 = True
 		
 	def setRot(self, *args):
 		self.rot = args[0]
 		self.toSend.add('rot')
+		self.rTo0 = True
 		
 	def setWakeup(self, *args):
 		self.toSend.add('posW')
@@ -339,6 +359,8 @@ class W1:
 	def setSleep(self, *args):
 		self.toSend.add('posS')
 	
+	def update_ac(self, *args):
+		self.toSend.add('ac')
 	
 	
 	
@@ -359,17 +381,21 @@ class W1:
 				self.sender.send_wu()
 			elif u == 'posS':
 				self.sender.send_slp()
+			elif u == 'ac':
+				self.sender.send_ac(self.anticolision.get())
 				
 		self.toSend.clear()
 	
-		if self.dir != 0:
+		if self.wTo0:
 			self.dir = 0
 			self.toSend.add('dir')
+			self.wTo0 = False
 		
-		if self.rot != 0:
+		if self.rTo0:
 			self.rot = 0
 			self.toSend.add('rot')
-		
+			self.rTo0 = False
+	
 		self.root.after(500, self.send)
 		
 		
@@ -403,26 +429,38 @@ class W1:
 		
 		if event.keycode == 87:		# W key
 			self.buttons["fw"].config(relief="raised")
+			self.dir = 0
+			self.toSend.add('dir')
 			return
 		
 		if event.keycode == 68:		# D key
 			self.buttons["r"].config(relief="raised")
+			self.dir = 0
+			self.toSend.add('dir')
 			return
 		
 		if event.keycode == 83:		# S key
 			self.buttons["bw"].config(relief="raised")
+			self.dir = 0
+			self.toSend.add('dir')
 			return
 		
 		if event.keycode == 65:		# A key
 			self.buttons["l"].config(relief="raised")
+			self.dir = 0
+			self.toSend.add('dir')
 			return
 		
 		if event.keycode == 69:		# E key
 			self.buttons["rr"].config(relief="raised")
+			self.rot = 0
+			self.toSend.add('rot')
 			return
 		
 		if event.keycode == 81:		# Q key
 			self.buttons["rl"].config(relief="raised")
+			self.rot = 0
+			self.toSend.add('rot')
 			return
 		
 	def handleKeyActions(self):
@@ -504,13 +542,14 @@ class Sender:
 						'ping': 'p',
 						'walk': 'w',
 						'rot': 'r',
-						'speed': 's',
+						'speed': 'v',
 						'steps': 't',
 						'cam': 'c',
 						'mode': 'm',
 						'pos': 'q',	# Position = sleep or wakeup
 						'wakeup': '1',
-						'sleep': '0'
+						'sleep': '0',
+						'anticolision': 'a'
 						}
 		
 	
@@ -581,7 +620,8 @@ class Sender:
 		th.start()
 		
 	def speed(self, sp):
-		self.sock.sendto(self.headers['speed']+str(sp), (self.ip, self.port))
+		realSp = int((1-(sp/10.0)) * 30 + 10)
+		self.sock.sendto(self.headers['speed']+str(realSp), (self.ip, self.port))
 	# ---------------------------------
 	
 	
@@ -592,6 +632,16 @@ class Sender:
 		
 	def steps(self, st):
 		self.sock.sendto(self.headers['steps']+str(st), (self.ip, self.port))
+	# ---------------------------------
+	
+	
+	# -------------- AntiColision --------------
+	def send_ac(self, ac):
+		th = threading.Thread(target=partial(self.ac, (ac)))
+		th.start()
+		
+	def ac(self, ac):
+		self.sock.sendto(self.headers['anticolision']+str(ac), (self.ip, self.port))
 	# ---------------------------------
 	
 	
