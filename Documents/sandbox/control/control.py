@@ -4,7 +4,7 @@ import time
 import threading
 import sys
 import socket
-import serial
+#import serial
 from functools import partial
 
 
