@@ -1,5 +1,9 @@
 #include <UltrasonicSensor.h>
+#include <ArduinoSTL.h>
 #include <Servo.h>
+
+#define max(a,b) ((a)>(b)?(a):(b))
+#define min(a,b) ((a)<(b)?(a):(b))
 
 float TODEG = 57.3; // Conversion from rad to deg
 
@@ -10,7 +14,7 @@ String serialHeader;       // Header of the message (2 chars)
 String serialBody;         // The body of the message recieved
 // ===================================================================================
 
-// ======================== Camera Servos ============================================
+// ======================== Ultrasonic Sensor ============================================
 UltrasonicSensorArray SensorArray = UltrasonicSensorArray(3);
 // ===================================================================================
 
@@ -82,6 +86,7 @@ int s_rot = 0;    // Direction to rotate
 int s_sp = 15;    // Speed
 int s_steps = 1;  // Steps
 int s_ac = 0;   // Anti Colision
+const int safeDist = 30;
 // ===================================================================================
 
 
@@ -732,12 +737,9 @@ void loop() {
 
   for (int i=0; i<s_steps; i++){
     if (s_ac == 1){
-      // Comprobar obstaculo, s_dir = 0; y break;
       SensorArray.measure();
-      String str = SensorArray.toString();
-      Serial.println(str);
       int distObj = SensorArray.getDistanceOf(1); // El del medio
-      if (distObj < 20)
+      if (distObj < safeDist)
       {
         s_dir = 0;
         break;
@@ -759,6 +761,6 @@ void loop() {
     }
   }
   
-  delay(20);
+  delay(500);
 
 }
