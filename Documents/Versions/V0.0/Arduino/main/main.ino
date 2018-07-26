@@ -95,7 +95,7 @@ void setup() {
   Serial.begin(115200);
 
   // Attach servos
-  /*S_camH.attach(46);
+  S_camH.attach(46);
   S_camV.attach(48);
   
   S_RF1.attach(22);
@@ -109,7 +109,7 @@ void setup() {
   S_RB3.attach(38);
   S_LB1.attach(40);
   S_LB2.attach(42);
-  S_LB3.attach(44);*/
+  S_LB3.attach(44);
 
   // Init coords
   RFx = 12;
